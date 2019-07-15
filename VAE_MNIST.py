@@ -16,7 +16,7 @@ from torch import nn, optim
 from torch.nn import functional as F
 from torchvision import datasets, transforms
 from torchvision.utils import save_image
-
+import time
 
 
 parser = argparse.ArgumentParser(description='VAE MNIST Example')
@@ -76,9 +76,10 @@ class VAE(nn.Module):
         z = self.reparameterize(mu, logvar)
         return self.decode(z), mu, logvar
 
+if 'model' not in locals():
+    model = VAE().to(device)
 
-model = VAE().to(device)
-optimizer = optim.Adam(model.parameters(), lr=1e-6)
+optimizer = optim.Adam(model.parameters(), lr=1e-5)
 
 
 # Reconstruction + KL divergence losses summed over all elements and batch
@@ -105,43 +106,42 @@ def loss_function(recon_x, x, mu, logvar):
 #                if n == picked_module_name]
 #        print(self.module_names[pick[0]])
 #       
-#        handle = self.modules[pick[0]].register_forward_hook(GetHooked)   # this is like what you did today. 
+#        handle = self.modules[pick[0]].register_forward_hook(acquire_data_hook)   # this is like what you did today. 
 #        self.net(self.input)
 #        handle.remove()
 
 
 
-def GetHooked(self, theinput, theoutput):    # Now THIS is a hook, again, look at the arguments;  a hook must have these. 
-   global Global
-   Global=theoutput
+def acquire_data_hook(self, input_tuple, output_tensor):    # Now THIS is a hook, again, look at the arguments;  a hook must have these. 
+   global ACQUIRED_DATA
+   ACQUIRED_DATA=output_tensor
 
 
 
 
-The=model.fc4.register_backward_hook(GetHooked)
+acq_hook_handle = model.fc4.register_forward_hook(acquire_data_hook)
 
 def display_images(img):
+    # img is a tensor containing a stack of images, shaped the 
+    #  way pytorch does it, i.e. number of examples by number of 
+    #  channels by number of rows by number of columns. The MNIST images are
+    #  grayscale images, i.e. they have one channel only. 
+    #
     nr=8
     nc=16
     s=28 #side of a square (28by28)
     img_np=img.cpu().detach().numpy()
     new_img=np.reshape(img_np, (nr*nc,s,s))
     disp=np.zeros((nr*s,nc*s))
-#    print(img.size())
-#    print(img_np.shape)
-#    print(newimg.shape)
-#    print(disp.shape)
-   
+  
     for i in range(nr):
         for j in range(nc):
-                read_data=int(nc*i+j)
+                read_data = int(nc*i+j)
                 r0=i*s
                 c0=j*s
-                
                 disp[r0:(r0+s),c0:(c0+s)]=new_img[read_data,:,:]
     plt.imshow(disp)
     plt.pause(0.05) 
-    print('I made it!')
   
 def train(epoch):
     model.train()
@@ -158,20 +158,19 @@ def train(epoch):
         loss.backward()
         train_loss += loss.item()
         optimizer.step()
-        if batch_idx % args.log_interval == 0:
-#            j=Global.cpu()
-#            k=j.detach().numpy()
-#            plt.imshow(k)
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                epoch, batch_idx * len(data), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader),
-                loss.item() / len(data)))
-#    plt.pause(0.25)
-#    plt.imshow(k)
-#            print(plt.imshow(k))
+
+#        if batch_idx % args.log_interval == 0:
+#            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+#                epoch, batch_idx * len(data), len(train_loader.dataset),
+#                100. * batch_idx / len(train_loader),
+#                loss.item() / len(data)))
+
     print('====> Epoch: {} Average loss: {:.4f}'.format(
           epoch, train_loss / len(train_loader.dataset)))
-    display_images(Global)
+
+    display_images(ACQUIRED_DATA)
+    torch.save(model.state_dict(),'VAE' + date_for_filename())
+
     
 def test(epoch):
     model.eval()
@@ -195,6 +194,18 @@ def take(n, iterable):
     "Return first n items of the iterable as a list"
     return list(itertools.islice(iterable, n))
 
+def date_for_filename():
+    tgt = time.localtime()
+    year = str(tgt.tm_year)
+    mon = "{:02}".format(tgt.tm_mon)
+    day = "{:02}".format(tgt.tm_mday)
+    hour = "{:02}".format(tgt.tm_hour)
+    minute = "{:02}".format(tgt.tm_min)
+    datestr = year + mon + day + '_' + hour + minute
+    return datestr
+
+
+
 
 if __name__ == "__main__":
     for epoch in range(1, args.epochs + 1):
@@ -203,5 +214,5 @@ if __name__ == "__main__":
         with torch.no_grad():
             sample = torch.randn(64, 20).to(device)
             sample = model.decode(sample).cpu()
-#            save_image(sample.view(64, 1, 28, 28),
-#                       'results/sample_' + str(epoch) + '.png')
+            save_image(sample.view(64, 1, 28, 28),
+                       'VAEresults/sample_' + str(epoch) + '.png')
