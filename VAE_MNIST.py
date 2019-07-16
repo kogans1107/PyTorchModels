@@ -99,18 +99,6 @@ def loss_function(recon_x, x, mu, logvar):
     return BCE + beta * KLD
 
 
-#def get_data_loader(self,m):   # this sets the hook. I should not have put "hook" in its name, because it is not a hook (look at its arguments)
-#        picked_module_name = v.get()
-#       
-#        pick = [i for i,n in enumerate(self.module_names)\
-#                if n == picked_module_name]
-#        print(self.module_names[pick[0]])
-#       
-#        handle = self.modules[pick[0]].register_forward_hook(acquire_data_hook)   # this is like what you did today. 
-#        self.net(self.input)
-#        handle.remove()
-
-
 
 def acquire_data_hook(self, input_tuple, output_tensor):    # Now THIS is a hook, again, look at the arguments;  a hook must have these. 
    global ACQUIRED_DATA
@@ -119,7 +107,8 @@ def acquire_data_hook(self, input_tuple, output_tensor):    # Now THIS is a hook
 
 
 
-acq_hook_handle = model.fc4.register_forward_hook(acquire_data_hook)
+
+acq_hook_handle = model.fc21.register_forward_hook(acquire_data_hook)
 
 def display_images(img):
     # img is a tensor containing a stack of images, shaped the 
@@ -127,9 +116,9 @@ def display_images(img):
     #  channels by number of rows by number of columns. The MNIST images are
     #  grayscale images, i.e. they have one channel only. 
     #
-    nr=8
-    nc=16
-    s=28 #side of a square (28by28)
+    nr=8 #nr-number of rows we're reshaping the image pixels 
+    nc=16 #nc=number of colums we're reshaping the image pixels
+    s=20 #side of a square (28by28)
     img_np=img.cpu().detach().numpy()
     new_img=np.reshape(img_np, (nr*nc,s,s))
     disp=np.zeros((nr*s,nc*s))
@@ -146,7 +135,7 @@ def display_images(img):
 def train(epoch):
     model.train()
     train_loss = 0
-    for batch_idx, (data, _) in enumerate(train_loader):
+    for batch_idx, (data, which_digit) in enumerate(train_loader):
         if batch_idx > 467: #last bactch only has 96 examples (#468)
             break
         data = data.to(device)
@@ -169,8 +158,8 @@ def train(epoch):
           epoch, train_loss / len(train_loader.dataset)))
 
     display_images(ACQUIRED_DATA)
-    torch.save(model.state_dict(),'VAE' + date_for_filename())
-
+    torch.save(model.state_dict(),'VAEresults/sample_' + str(epoch)+'_VAE' + date_for_filename())
+    return which_digit
     
 def test(epoch):
     model.eval()
@@ -180,12 +169,6 @@ def test(epoch):
             data = data.to(device)
             recon_batch, mu, logvar = model(data)
             test_loss += loss_function(recon_batch, data, mu, logvar).item()
-            if i == 0:
-                n = min(data.size(0), 8)
-                comparison = torch.cat([data[:n],
-                                      recon_batch.view(args.batch_size, 1, 28, 28)[:n]])
-#                save_image(comparison.cpu(),
-#                         'results/reconstruction_' + str(epoch) + '.png', nrow=n)
 
     test_loss /= len(test_loader.dataset)
     print('====> Test set loss: {:.4f}'.format(test_loss))
