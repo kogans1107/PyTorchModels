@@ -159,10 +159,10 @@ def display_bottleneck(axes):
 
     for i in range(10):
         fc21disp[i,:] = \
-        np.sum(fc21current[which_digit==i,:].\
+        np.mean(fc21current[which_digit==i,:].\
                cpu().detach().numpy(),axis=0)
         fc22disp[i,:] = \
-        np.sum(fc22current[which_digit==i,:].\
+        np.mean(fc22current[which_digit==i,:].\
                cpu().detach().numpy(),axis=0)
 
     axes[0].imshow(fc21disp)
