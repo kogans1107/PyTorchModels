@@ -23,7 +23,7 @@ parser = argparse.ArgumentParser(description='VAE MNIST Example')
 parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                     help='input batch size for training (default: 128)')
 parser.add_argument('--epochs', type=int, default=10, metavar='N',
-                    help='number of epochs to train (default: 100)')
+                    help='number of epochs to train (default: 10)')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='enables CUDA training')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
@@ -82,6 +82,14 @@ class VAE(nn.Module):
         #   Want to raster scan the decode function via its inputs, rather than 
         #    sampling randomly. 
         #
+
+    def get_samples(self, mu, logvar):
+        Tmu = torch.tensor(mu, dtype=torch.float).to(device)
+        Tlogvar = torch.tensor(logvar, dtype=torch.float).to(device)
+        z = self.reparameterize(Tmu, Tlogvar)
+        sample = model.decode(z)
+        return sample
+
 
 if 'model' not in locals():
     print('new randomly initialized model...\n')
@@ -165,8 +173,6 @@ def display_bottleneck(axes):
     
     plt.pause(0.05)
     
-  
-
 
 def train(epoch):
     model.train()
