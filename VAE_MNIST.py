@@ -172,7 +172,44 @@ def display_bottleneck(axes):
     axes[1].imshow(fc22disp)
     
     plt.pause(0.05)
+  
+def display_as_histogram(axes):
+    for batch_idx, (data, which_digit) in enumerate(train_loader):
+        break
     
+    fc21current,fc22current = model.encode(data.cuda().view(-1,784))
+    
+    fc21disp = np.zeros((10,20))
+    fc22disp = np.zeros((10,20))
+    
+    for i in range(10):
+        fc21disp[i,:] = \
+        np.mean(fc21current[which_digit==i,:].\
+              cpu().detach().numpy(),axis=0)
+        fc22disp[i,:] = \
+        np.mean(fc22current[which_digit==i,:].\
+               cpu().detach().numpy(),axis=0)
+
+
+    a=np.hstack(fc21disp)
+    plt.hist(a, bins= 10)
+    plt.show()
+    plt.pause(0.5)
+#    H,X1 =np.histogram(fc21disp, bins=10)
+#    dx=X1[1] - X1[0]
+#    F1 = np.cumsum(H)*dx
+#    
+#    J,X2=np.histogram(fc22disp, bins=10)
+#    jx=X2[1] -X2[0]
+#    G1= np.cumsum(J)*jx
+#    
+#    plt.plot(X1[1:], F1)
+#    plt.show()
+#    plt.pause(0.5)
+#    
+#    plt.plot(X2[1:], G1)
+#    plt.show()
+#    plt.pause(0.5)
 
 def train(epoch):
     model.train()
@@ -253,9 +290,10 @@ if __name__ == "__main__":
         
     for epoch in range(1, args.epochs + 1):
         train(epoch)
-        display_bottleneck(fc2axes)
+        display_as_histogram(fc2axes)
+#        display_bottleneck(fc2axes)
         plt.figure(fc4fig.number)
-        display_images(ACQUIRED_DATA)
+#        display_images(ACQUIRED_DATA)
         test(epoch)
         with torch.no_grad():
             sample = torch.randn(64, 20).to(device)
