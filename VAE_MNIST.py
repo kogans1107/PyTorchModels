@@ -203,27 +203,27 @@ def display_as_histogram(ax):
             ax[i,j].title.set_text(str(this_digit))
             ax[i,j].set_xlim((-3,3))
     
-<<<<<<< HEAD
-    for i in range(10):
-        fc21disp[i,:] = \
-        np.mean(fc21current[which_digit==i,:].\
-              cpu().detach().numpy(),axis=0)
-        fc22disp[i,:] = \
-        np.mean(fc22current[which_digit==i,:].\
-               cpu().detach().numpy(),axis=0)
 
+#    for i in range(10):
+#        fc21disp[i,:] = \
+#        np.mean(fc21current[which_digit==i,:].\
+#              cpu().detach().numpy(),axis=0)
+#        fc22disp[i,:] = \
+#        np.mean(fc22current[which_digit==i,:].\
+#               cpu().detach().numpy(),axis=0)
+#
+#
+#        a=np.hstack(fc21disp)
+#            fc21_new=plt.hist(a, bins= 10)
+#            b=np.hstack(fc22disp)
+#            fc22_new=plt.hist(b, bins=10)
+#            axes[0].plt.imshow()
+#            plt.pause(0.5)
+#            axes[1].plt.imshow()
+#    
+#        plt.show()
 
-    a=np.hstack(fc21disp)
-    fc21_new=plt.hist(a, bins= 10)
-    b=np.hstack(fc22disp)
-    fc22_new=plt.hist(b, bins=10)
-    axes[0].plt.imshow()
-    plt.pause(0.5)
-    axes[1].plt.imshow()
-=======
-    plt.show()
->>>>>>> 83914dd59b18bcea4f87e4642f133198eee359da
-    plt.pause(0.5)
+        plt.pause(0.5)
 #    H,X1 =np.histogram(fc21disp, bins=10)
 #    dx=X1[1] - X1[0]
 #    F1 = np.cumsum(H)*dx
