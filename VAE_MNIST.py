@@ -95,6 +95,9 @@ if 'model' not in locals():
     print('new randomly initialized model...\n')
     model = VAE().to(device)
 
+if False: # F9 this to start with a trained model. 
+    model.load_state_dict(torch.load('VAE20190716_1551'))
+
 optimizer = optim.Adam(model.parameters(), lr=1e-5)
 beta = 0.5
 
@@ -186,6 +189,9 @@ def display_as_histogram(ax):
     #   kind of an odd thing to do...just experimenting at this point. 
     fc21current,fc22current = model.encode(data.cuda().view(-1,784))
     
+    rc = np.random.uniform(size=3)
+    color = (rc[0], rc[1], rc[2], 0.1)
+    
     for i in range(3):
         for j in range(4):
             this_digit = i*4 + j
@@ -193,8 +199,9 @@ def display_as_histogram(ax):
                 break
             
             data = np.hstack(fc21current[which_digit==this_digit,:].cpu().detach().numpy())
-            ax[i,j].hist(data, bins= 10)
+            ax[i,j].hist(data, bins= 10, color=color)
             ax[i,j].title.set_text(str(this_digit))
+            ax[i,j].set_xlim((-3,3))
     
     plt.show()
     plt.pause(0.5)
