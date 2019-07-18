@@ -322,12 +322,12 @@ if __name__ == "__main__":
         
     for epoch in range(1, args.epochs + 1):
         train(epoch)
-<<<<<<< HEAD
+
 #        display_as_histogram(fc2axes)
         display_bottleneck(fc2axes)
         plt.figure(fc4fig.number)
         display_images(ACQUIRED_DATA)
-=======
+
         
         plt.figure(hist_fig.number)
         display_as_histogram(hist_axes)
@@ -338,7 +338,7 @@ if __name__ == "__main__":
         plt.figure(fc4fig.number)
         display_images(ACQUIRED_DATA)
         
->>>>>>> 83914dd59b18bcea4f87e4642f133198eee359da
+
         test(epoch)
         with torch.no_grad():
             sample = torch.randn(64, 20).to(device)
