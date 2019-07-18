@@ -96,7 +96,7 @@ if 'model' not in locals():
     model = VAE().to(device)
 
 if False: # F9 this to start with a trained model. 
-    model.load_state_dict(torch.load('VAE20190716_1551'))
+    model.load_state_dict(torch.load('VAE20190716_1625'))
 
 optimizer = optim.Adam(model.parameters(), lr=1e-5)
 beta = 0.5
@@ -199,7 +199,7 @@ def display_as_histogram(ax):
                 break
             
             data = np.hstack(fc21current[which_digit==this_digit,:].cpu().detach().numpy())
-            ax[i,j].hist(data, bins= 10, color=color)
+            ax[i,j].hist(data, bins= 10, color=color, density=True)
             ax[i,j].title.set_text(str(this_digit))
             ax[i,j].set_xlim((-3,3))
     
