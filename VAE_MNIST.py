@@ -22,7 +22,7 @@ import time
 parser = argparse.ArgumentParser(description='VAE MNIST Example')
 parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                     help='input batch size for training (default: 128)')
-parser.add_argument('--epochs', type=int, default=10, metavar='N',
+parser.add_argument('--epochs', type=int, default=3, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='enables CUDA training')
@@ -171,28 +171,31 @@ def display_bottleneck(axes):
     axes[0].imshow(fc21disp)
     axes[1].imshow(fc22disp)
     
-    plt.pause(0.05)
+    plt.pause(0.5)
   
-def display_as_histogram(axes):
+def display_as_histogram(ax):
     for batch_idx, (data, which_digit) in enumerate(train_loader):
         break
     
+    # encode returns two 20-vectors: the means and standard deviations
+    #   of normal distributions in the hidden space that generate
+    #   each digit when passed to decode. 
+    # We want to look at the distribution of these values, rather 
+    #   than its mean. Note that here I am lumping all 20 dimensions
+    #   into a single histogram for each digit (via hstack); that's
+    #   kind of an odd thing to do...just experimenting at this point. 
     fc21current,fc22current = model.encode(data.cuda().view(-1,784))
     
-    fc21disp = np.zeros((10,20))
-    fc22disp = np.zeros((10,20))
+    for i in range(3):
+        for j in range(4):
+            this_digit = i*4 + j
+            if this_digit > 9:
+                break
+            
+            data = np.hstack(fc21current[which_digit==this_digit,:].cpu().detach().numpy())
+            ax[i,j].hist(data, bins= 10)
+            ax[i,j].title.set_text(str(this_digit))
     
-    for i in range(10):
-        fc21disp[i,:] = \
-        np.mean(fc21current[which_digit==i,:].\
-              cpu().detach().numpy(),axis=0)
-        fc22disp[i,:] = \
-        np.mean(fc22current[which_digit==i,:].\
-               cpu().detach().numpy(),axis=0)
-
-
-    a=np.hstack(fc21disp)
-    plt.hist(a, bins= 10)
     plt.show()
     plt.pause(0.5)
 #    H,X1 =np.histogram(fc21disp, bins=10)
@@ -287,13 +290,22 @@ if __name__ == "__main__":
 
     if "fc4fig" not in locals():
         fc4fig = plt.figure()
+ 
+    if "hist_fig" not in locals():
+        hist_fig, hist_axes = plt.subplots(3,4)
         
     for epoch in range(1, args.epochs + 1):
         train(epoch)
-        display_as_histogram(fc2axes)
-#        display_bottleneck(fc2axes)
+        
+        plt.figure(hist_fig.number)
+        display_as_histogram(hist_axes)
+        
+        plt.figure(fc2fig.number)
+        display_bottleneck(fc2axes)
+        
         plt.figure(fc4fig.number)
-#        display_images(ACQUIRED_DATA)
+        display_images(ACQUIRED_DATA)
+        
         test(epoch)
         with torch.no_grad():
             sample = torch.randn(64, 20).to(device)
