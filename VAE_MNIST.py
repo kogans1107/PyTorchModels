@@ -176,6 +176,27 @@ def display_bottleneck(axes):
     
     plt.pause(0.5)
   
+    
+def connect_the_numbers(vcax):
+    for batch_idx, (data, which_digit) in enumerate(train_loader):
+        break
+    
+    fc21current,fc22current = model.encode(data.cuda().view(-1,784))
+    
+    fc21disp = np.zeros((10,20))
+    fc22disp = np.zeros((10,20))
+    
+    for i in range (10):
+        fc21disp[i,:] = \
+        np.mean(fc21current[which_digit==i,:].\
+              cpu().detach().numpy(),axis=0)
+        fc22disp[i,:] = \
+        np.mean(fc22current[which_digit==i,:].\
+               cpu().detach().numpy(),axis=0)
+    
+    for which_digit != i in range(10):
+        data=which_digit.unsqueeze-i
+    
 def display_as_histogram(ax):
     for batch_idx, (data, which_digit) in enumerate(train_loader):
         break
@@ -190,7 +211,7 @@ def display_as_histogram(ax):
     fc21current,fc22current = model.encode(data.cuda().view(-1,784))
     
     rc = np.random.uniform(size=3)
-    color = (rc[0], rc[1], rc[2], 0.1)
+    color = (rc[0], rc[1], rc[2], 0.1) #transparency in the histogram
     
     for i in range(3):
         for j in range(4):
@@ -202,8 +223,10 @@ def display_as_histogram(ax):
             ax[i,j].hist(data, bins= 10, color=color, density=True)
             ax[i,j].title.set_text(str(this_digit))
             ax[i,j].set_xlim((-3,3))
+            ax[i,j].set_ylim((0,0.5))
     
 
+    plt.pause(0.5)
 #    for i in range(10):
 #        fc21disp[i,:] = \
 #        np.mean(fc21current[which_digit==i,:].\
@@ -222,8 +245,8 @@ def display_as_histogram(ax):
 #            axes[1].plt.imshow()
 #    
 #        plt.show()
-
-        plt.pause(0.5)
+#
+#        plt.pause(0.5)
 #    H,X1 =np.histogram(fc21disp, bins=10)
 #    dx=X1[1] - X1[0]
 #    F1 = np.cumsum(H)*dx
