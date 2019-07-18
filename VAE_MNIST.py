@@ -185,8 +185,12 @@ def display_as_histogram(axes):
 
 
     a=np.hstack(fc21disp)
-    plt.hist(a, bins= 10)
-    plt.show()
+    fc21_new=plt.hist(a, bins= 10)
+    b=np.hstack(fc22disp)
+    fc22_new=plt.hist(b, bins=10)
+    axes[0].plt.imshow()
+    plt.pause(0.5)
+    axes[1].plt.imshow()
     plt.pause(0.5)
 #    H,X1 =np.histogram(fc21disp, bins=10)
 #    dx=X1[1] - X1[0]
@@ -283,10 +287,10 @@ if __name__ == "__main__":
         
     for epoch in range(1, args.epochs + 1):
         train(epoch)
-        display_as_histogram(fc2axes)
-#        display_bottleneck(fc2axes)
+#        display_as_histogram(fc2axes)
+        display_bottleneck(fc2axes)
         plt.figure(fc4fig.number)
-#        display_images(ACQUIRED_DATA)
+        display_images(ACQUIRED_DATA)
         test(epoch)
         with torch.no_grad():
             sample = torch.randn(64, 20).to(device)
