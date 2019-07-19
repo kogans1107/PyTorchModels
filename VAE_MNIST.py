@@ -192,7 +192,21 @@ def connect_the_numbers():
         torch.mean(fc21current[which_digit==i,:])
         
     mu_dist = torch.pdist(fc21disp)
-        
+    
+
+    
+    dist_disp=np.zeros(10,10)    
+    
+    counter=0
+    
+    for i in range (10):
+        for j in range (10):
+            dist_disp[i,j]=mu_dist[counter,counter]
+            counter=counter+1
+    
+    plt.plot(dist_disp)
+    plt.imshow()
+    plt.pause(0.5)
     return(mu_dist)
     
     
@@ -419,6 +433,9 @@ if __name__ == "__main__":
     if "corr_fig" not in locals():
         corr_fig, corr_axes = plt.subplots(1,1)
         
+    if "con_fig" not in locals():
+        con_fig=plt.subplot(1,1)
+        
         
     for epoch in range(1, args.epochs + 1):
         train(epoch)
@@ -439,7 +456,8 @@ if __name__ == "__main__":
         plt.figure(corr_fig.number)
         display_corr(corr_axes)
         
-        
+        plt.figure(con_fig.number)
+        connect_the_numbers(con_fig)
 
         test(epoch)
         with torch.no_grad():
