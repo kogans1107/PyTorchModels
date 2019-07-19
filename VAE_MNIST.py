@@ -163,6 +163,7 @@ def display_bottleneck(axes):
     fc21disp = np.zeros((10,20))
     fc22disp = np.zeros((10,20))
 
+
     for i in range(10):
         fc21disp[i,:] = \
         np.mean(fc21current[which_digit==i,:].\
@@ -171,31 +172,33 @@ def display_bottleneck(axes):
         np.mean(fc22current[which_digit==i,:].\
                cpu().detach().numpy(),axis=0)
 
+    print(fc21disp)
     axes[0].imshow(fc21disp)
     axes[1].imshow(fc22disp)
     
     plt.pause(0.5)
   
     
-def connect_the_numbers(vcax):
+def connect_the_numbers():
     for batch_idx, (data, which_digit) in enumerate(train_loader):
         break
     
     fc21current,fc22current = model.encode(data.cuda().view(-1,784))
     
-    fc21disp = np.zeros((10,20))
-    fc22disp = np.zeros((10,20))
+    fc21disp = torch.zeros((10,20))
     
-    for i in range (10):
+    for i in range(10):
         fc21disp[i,:] = \
-        np.mean(fc21current[which_digit==i,:].\
-              cpu().detach().numpy(),axis=0)
-        fc22disp[i,:] = \
-        np.mean(fc22current[which_digit==i,:].\
-               cpu().detach().numpy(),axis=0)
+        torch.mean(fc21current[which_digit==i,:])
+        
+    mu_dist = torch.pdist(fc21disp)
+        
+    return(mu_dist)
     
-    for which_digit != i in range(10):
-        data=which_digit.unsqueeze-i
+    
+    
+#    for which_digit != i in range(10):
+#        data=which_digit.unsqueeze-i
     
 def display_as_histogram(ax):
     for batch_idx, (data, which_digit) in enumerate(train_loader):
@@ -296,6 +299,43 @@ def display_corr():
 
     return
 
+def display_transition(n0,n1):
+    fig,ax = plt.subplots(2,5)
+    
+    for batch_idx, (data, which_digit) in enumerate(train_loader):
+        break
+    
+    fc21current,fc22current = model.encode(data.cuda().view(-1,784))
+
+    fc21disp = np.zeros((2,20))
+#    fc22disp = np.zeros((2,20))
+
+    for i,n in enumerate([n0 ,n1]):
+        fc21disp[i,:] = \
+        np.mean(fc21current[which_digit==n,:].\
+              cpu().detach().numpy(),axis=0)
+#        fc22disp[i,:] = \
+#        np.mean(fc22current[which_digit==n,:].\
+#               cpu().detach().numpy(),axis=0)
+
+
+    z = torch.zeros((10,20)).to(device)  
+    for i in range(10):
+        
+        alpha = -np.log(11/(i+1)-1);
+        z[i,:] = torch.tensor(fc21disp[0,:]*alpha + fc21disp[1,:]*(1-alpha))
+        
+    xout = model.decode(z).view((10,28,28)).cpu().detach().numpy()
+    
+    for i in range(2):
+        for j in range(5):
+            ax[i,j].imshow(xout[i*5+j,:,:])
+            
+            
+    return
+
+
+
 def train(epoch):
     model.train()
     train_loss = 0
@@ -379,6 +419,7 @@ if __name__ == "__main__":
     if "corr_fig" not in locals():
         corr_fig, corr_axes = plt.subplots(1,1)
         
+        
     for epoch in range(1, args.epochs + 1):
         train(epoch)
 
@@ -397,6 +438,7 @@ if __name__ == "__main__":
         
         plt.figure(corr_fig.number)
         display_corr(corr_axes)
+        
         
 
         test(epoch)
