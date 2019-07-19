@@ -240,6 +240,39 @@ def display_as_histogram(ax):
 #    plt.show()
 #    plt.pause(0.5)
 
+def display_corr():   
+    plt.clf()
+    
+    for batch_idx, (data, which_digit) in enumerate(train_loader):
+        break
+    
+    fc21current,fc22current = model.encode(data.cuda().view(-1,784))
+
+    fc21disp = np.zeros((10,20))
+    fc22disp = np.zeros((10,20))
+
+    for i in range(10):
+        fc21disp[i,:] = \
+        np.mean(fc21current[which_digit==i,:].\
+              cpu().detach().numpy(),axis=0)
+        fc22disp[i,:] = \
+        np.mean(fc22current[which_digit==i,:].\
+               cpu().detach().numpy(),axis=0)
+    
+    rho = np.corrcoef(fc21disp)
+    
+    for i in range(10):
+        for j in range(0,i+1):
+            rho[i,j]=0.0
+    
+    plt.imshow(rho)
+    plt.colorbar()
+    plt.pause(0.5)
+#    plt.show()
+#    fig.colorbar()
+
+    return
+
 def train(epoch):
     model.train()
     train_loss = 0
@@ -319,6 +352,9 @@ if __name__ == "__main__":
  
     if "hist_fig" not in locals():
         hist_fig, hist_axes = plt.subplots(3,4)
+
+    if "corr_fig" not in locals():
+        corr_fig, corr_axes = plt.subplots(1,1)
         
     for epoch in range(1, args.epochs + 1):
         train(epoch)
@@ -327,16 +363,17 @@ if __name__ == "__main__":
         display_bottleneck(fc2axes)
         plt.figure(fc4fig.number)
         display_images(ACQUIRED_DATA)
-
         
-        plt.figure(hist_fig.number)
-        display_as_histogram(hist_axes)
+        display_as_histogram(hist_axes, hist_fig.number)
         
         plt.figure(fc2fig.number)
         display_bottleneck(fc2axes)
         
         plt.figure(fc4fig.number)
         display_images(ACQUIRED_DATA)
+        
+        plt.figure(corr_fig.number)
+        display_corr(corr_axes)
         
 
         test(epoch)
