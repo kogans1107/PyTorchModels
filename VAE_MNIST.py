@@ -96,7 +96,8 @@ if 'model' not in locals():
     model = VAE().to(device)
 
 if False: # F9 this to start with a trained model. 
-    model.load_state_dict(torch.load('VAE20190716_1625'))
+    model.load_state_dict(torch.load('VAE20190716_1625')) # KTO favorite
+    model.load_state_dict(torch.load('VAE20190716_1551')) # WJP favorite
 
 optimizer = optim.Adam(model.parameters(), lr=1e-5)
 beta = 0.5
@@ -178,8 +179,13 @@ def display_bottleneck(axes):
     
     plt.pause(0.5)
   
-    
-def connect_the_numbers():
+
+def display_deltas():
+#
+# This computes and returns the difference vectors between digit
+#    encodings. It doesn't yet display anything. 
+#
+
     for batch_idx, (data, which_digit) in enumerate(train_loader):
         break
     
@@ -189,30 +195,52 @@ def connect_the_numbers():
     
     for i in range(10):
         fc21disp[i,:] = \
-        torch.mean(fc21current[which_digit==i,:])
+        torch.mean(fc21current[which_digit==i,:],0)
+
+    delt_disp=np.zeros((10,10,20))  # There a 45 unique 20-vectors 
+                                    #  describing the differences
+                                    #  between average encodings 
+                                    #  for each digit. 
+    
+    for i in range (10):
+        for j in range (i+1,10):
+            delt_disp[i,j,:]=(fc21disp[i,:]-fc21disp[j,:]).cpu().detach().numpy()   
+    
+    return(delt_disp)
+
+
+def connect_the_numbers():
+#
+#  This plots the distance between each digit and every other 
+#    pair of digits. Interestingly, these distances are all nearly 
+#    the same in model VAE20190716_1551, consistent with the mean
+#    encodings being distributed on a 20-sphere. 
+#
+    for batch_idx, (data, which_digit) in enumerate(train_loader):
+        break
+    
+    fc21current,fc22current = model.encode(data.cuda().view(-1,784))
+    
+    fc21disp = torch.zeros((10,20))
+    
+    for i in range(10):
+        fc21disp[i,:] = \
+        torch.mean(fc21current[which_digit==i,:],0)
         
     mu_dist = torch.pdist(fc21disp)
     
-
-    
-    dist_disp=np.zeros(10,10)    
+    dist_disp=np.zeros((10,10))
     
     counter=0
-    
     for i in range (10):
-        for j in range (10):
-            dist_disp[i,j]=mu_dist[counter,counter]
+        for j in range (i+1,10):
+            dist_disp[i,j]=mu_dist[counter]
             counter=counter+1
     
-    plt.plot(dist_disp)
-    plt.imshow()
+    plt.plot(dist_disp.transpose())
     plt.pause(0.5)
     return(mu_dist)
     
-    
-    
-#    for which_digit != i in range(10):
-#        data=which_digit.unsqueeze-i
     
 def display_as_histogram(ax):
     for batch_idx, (data, which_digit) in enumerate(train_loader):
