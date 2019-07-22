@@ -22,7 +22,7 @@ import time
 parser = argparse.ArgumentParser(description='VAE MNIST Example')
 parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                     help='input batch size for training (default: 128)')
-parser.add_argument('--epochs', type=int, default=3, metavar='N',
+parser.add_argument('--epochs', type=int, default=100, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='enables CUDA training')
@@ -173,7 +173,7 @@ def display_bottleneck(axes):
         np.mean(fc22current[which_digit==i,:].\
                cpu().detach().numpy(),axis=0)
 
-    print(fc21disp)
+   
     axes[0].imshow(fc21disp)
     axes[1].imshow(fc22disp)
     
@@ -206,7 +206,7 @@ def display_deltas():
         for j in range (i+1,10):
             delt_disp[i,j,:]=(fc21disp[i,:]-fc21disp[j,:]).cpu().detach().numpy()   
     
-    return(delt_disp)
+    return None
 
 
 def connect_the_numbers():
@@ -218,7 +218,7 @@ def connect_the_numbers():
 #
     for batch_idx, (data, which_digit) in enumerate(train_loader):
         break
-    
+    plt.clf()
     fc21current,fc22current = model.encode(data.cuda().view(-1,784))
     
     fc21disp = torch.zeros((10,20))
@@ -239,7 +239,7 @@ def connect_the_numbers():
     
     plt.plot(dist_disp.transpose())
     plt.pause(0.5)
-    return(mu_dist)
+    return None
     
     
 def display_as_histogram(ax):
@@ -272,41 +272,6 @@ def display_as_histogram(ax):
     
 
     plt.pause(0.5)
-#    for i in range(10):
-#        fc21disp[i,:] = \
-#        np.mean(fc21current[which_digit==i,:].\
-#              cpu().detach().numpy(),axis=0)
-#        fc22disp[i,:] = \
-#        np.mean(fc22current[which_digit==i,:].\
-#               cpu().detach().numpy(),axis=0)
-#
-#
-#        a=np.hstack(fc21disp)
-#            fc21_new=plt.hist(a, bins= 10)
-#            b=np.hstack(fc22disp)
-#            fc22_new=plt.hist(b, bins=10)
-#            axes[0].plt.imshow()
-#            plt.pause(0.5)
-#            axes[1].plt.imshow()
-#    
-#        plt.show()
-#
-#        plt.pause(0.5)
-#    H,X1 =np.histogram(fc21disp, bins=10)
-#    dx=X1[1] - X1[0]
-#    F1 = np.cumsum(H)*dx
-#    
-#    J,X2=np.histogram(fc22disp, bins=10)
-#    jx=X2[1] -X2[0]
-#    G1= np.cumsum(J)*jx
-#    
-#    plt.plot(X1[1:], F1)
-#    plt.show()
-#    plt.pause(0.5)
-#    
-#    plt.plot(X2[1:], G1)
-#    plt.show()
-#    plt.pause(0.5)
 
 def display_corr():   
     plt.clf()
@@ -404,7 +369,7 @@ def train(epoch):
           epoch, train_loss / len(train_loader.dataset)))
 
 
-    torch.save(model.state_dict(),'VAEresults/sample_' + str(epoch)+'_VAE' + date_for_filename())
+    torch.save(model.state_dict(),'VAEresults' + str(epoch)+'_VAE' + date_for_filename())
 
 
 #    display_images(ACQUIRED_DATA)
@@ -462,7 +427,7 @@ if __name__ == "__main__":
         corr_fig, corr_axes = plt.subplots(1,1)
         
     if "con_fig" not in locals():
-        con_fig=plt.subplot(1,1)
+        con_fig=plt.figure()
         
         
     for epoch in range(1, args.epochs + 1):
@@ -473,7 +438,7 @@ if __name__ == "__main__":
         plt.figure(fc4fig.number)
         display_images(ACQUIRED_DATA)
         
-        display_as_histogram(hist_axes, hist_fig.number)
+        display_as_histogram(hist_axes)
         
         plt.figure(fc2fig.number)
         display_bottleneck(fc2axes)
@@ -482,10 +447,10 @@ if __name__ == "__main__":
         display_images(ACQUIRED_DATA)
         
         plt.figure(corr_fig.number)
-        display_corr(corr_axes)
+        display_corr()
         
         plt.figure(con_fig.number)
-        connect_the_numbers(con_fig)
+        connect_the_numbers()
 
         test(epoch)
         with torch.no_grad():
