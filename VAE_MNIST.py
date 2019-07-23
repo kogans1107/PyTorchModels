@@ -208,10 +208,43 @@ def display_deltas():
     
     return None
 
-def display_means_relationship():
+def cosine_similiarity():
     
+#This code compares the cosine similarity between the mean and the std, This is currently the only model
+    #That I was able to use osine similiary to represent but ideally I want to compare the cosine similairity 
+    #between the different number I keep getting error messages so I need to try another approach
+    for batch_idx, (data, which_digit) in enumerate(train_loader):
+        break
+    
+    fc21current,fc22current = model.encode(data.cuda().view(-1,784))
+    
+    fc21disp = torch.zeros((10,20))
+    fc22disp = torch.zeros((10,20))
+    
+    for i in range(10):
+        fc21disp[i,:] = \
+        torch.mean(fc21current[which_digit==i,:],0)
+        fc22disp[i,:] = \
+        torch.mean(fc22current[which_digit==i,:],0)
+    
+    cos=nn.CosineSimilarity(dim=1, eps=1e-6)
+    
+#    Cosine=torch.zeros(10,10)
+    
+    angle_disp=cos(fc21disp,fc22disp)
+#    for i in range (10):
+#        for j in range (10):
+#        Cosine[i,j]=cos(fc21disp[i],fc21[j+1])
+#        In the commented out code I am trying to get the cosine difference of each number between each different 
+    #number and plot the result to a plot but I keep get an error message that the dimensions are off
+    plt.plot(angle_disp.cpu().detach().numpy(),'o')
+    plt.pause(0.05)
+    
+    
+    
+def display_means_relationship():
 #This code displays the means relationship between the means of each handwritten digit. I am attempting 
-#    to display the number as a graph and image to see which display provide the most detailed information. 
+#to display the number as a graph and image to see which display provide the most detailed information. 
     plt.clf()
     for batch_idx, (data, which_digit) in enumerate(train_loader):
         break
