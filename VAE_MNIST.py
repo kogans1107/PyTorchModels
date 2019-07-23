@@ -22,7 +22,7 @@ import time
 parser = argparse.ArgumentParser(description='VAE MNIST Example')
 parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                     help='input batch size for training (default: 128)')
-parser.add_argument('--epochs', type=int, default=100, metavar='N',
+parser.add_argument('--epochs', type=int, default=10, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='enables CUDA training')
@@ -96,7 +96,7 @@ if 'model' not in locals():
     model = VAE().to(device)
 
 if False: # F9 this to start with a trained model. 
-    model.load_state_dict(torch.load('VAE20190716_1625')) # KTO favorite
+    model.load_state_dict(torch.load('VAEresults100_VAE20190722_1316')) # KTO favorite
     model.load_state_dict(torch.load('VAE20190716_1551')) # WJP favorite
 
 optimizer = optim.Adam(model.parameters(), lr=1e-5)
@@ -208,8 +208,36 @@ def display_deltas():
     
     return None
 
+def display_means_relationship():
+    
+#This code displays the means relationship between the means of each handwritten digit. I am attempting 
+#    to display the number as a graph and image to see which display provide the most detailed information. 
+    plt.clf()
+    for batch_idx, (data, which_digit) in enumerate(train_loader):
+        break
+    fc21current,fc22current = model.encode(data.cuda().view(-1,784))
+    
+    fc21disp = torch.zeros((10,20))
+    
+    for i in range(10):
+        fc21disp[i,:] = \
+        torch.sum(fc21current[which_digit==i,:],0)
+    
+    disp=torch.zeros(10,1)
+    
+    for i in range (10):
+        disp[i]=torch.mean(fc21disp[i][:])
+    
+    plt.plot(disp.cpu().detach().numpy(), 'o')
 
-def connect_the_numbers():
+    plt.imshow(disp.cpu().detach().numpy())
+    plt.colorbar()
+    plt.pause(0.5)
+    return 
+
+    
+
+def display_relationship_vector():
 #
 #  This plots the distance between each digit and every other 
 #    pair of digits. Interestingly, these distances are all nearly 
@@ -236,10 +264,10 @@ def connect_the_numbers():
         for j in range (i+1,10):
             dist_disp[i,j]=mu_dist[counter]
             counter=counter+1
-    
+
     plt.plot(dist_disp.transpose())
     plt.pause(0.5)
-    return None
+    return dist_disp
     
     
 def display_as_histogram(ax):
@@ -429,6 +457,9 @@ if __name__ == "__main__":
     if "con_fig" not in locals():
         con_fig=plt.figure()
         
+    if "num_mean" not in locals():
+        num_mean=plt.figure()
+        
         
     for epoch in range(1, args.epochs + 1):
         train(epoch)
@@ -450,8 +481,10 @@ if __name__ == "__main__":
         display_corr()
         
         plt.figure(con_fig.number)
-        connect_the_numbers()
-
+        display_relationship_vector()
+        
+        plt.figure(num_mean.number)
+        display_numerical_relationship()
         test(epoch)
         with torch.no_grad():
             sample = torch.randn(64, 20).to(device)
