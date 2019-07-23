@@ -213,6 +213,7 @@ def cosine_similiarity():
 #This code compares the cosine similarity between the mean and the std, This is currently the only model
     #That I was able to use osine similiary to represent but ideally I want to compare the cosine similairity 
     #between the different number I keep getting error messages so I need to try another approach
+    plt.clf()
     for batch_idx, (data, which_digit) in enumerate(train_loader):
         break
     
@@ -237,7 +238,8 @@ def cosine_similiarity():
 #        Cosine[i,j]=cos(fc21disp[i],fc21[j+1])
 #        In the commented out code I am trying to get the cosine difference of each number between each different 
     #number and plot the result to a plot but I keep get an error message that the dimensions are off
-    plt.plot(angle_disp.cpu().detach().numpy(),'o')
+    #this is error messages IndexError: Dimension out of range (expected to be in range of [-1, 0], but got 1)
+    plt.plot(angle_disp.cpu().detach().numpy())
     plt.pause(0.05)
     
     
@@ -260,8 +262,8 @@ def display_means_relationship():
     
     for i in range (10):
         disp[i]=torch.mean(fc21disp[i][:])
-    
-    plt.plot(disp.cpu().detach().numpy(), 'o')
+#    
+#    plt.plot(disp.cpu().detach().numpy())
 
     plt.imshow(disp.cpu().detach().numpy())
     plt.colorbar()
@@ -492,7 +494,10 @@ if __name__ == "__main__":
         
     if "num_mean" not in locals():
         num_mean=plt.figure()
-        
+     
+    if "cosine_sim" not in locals():
+        cosine_sim=plt.figure()
+    
         
     for epoch in range(1, args.epochs + 1):
         train(epoch)
@@ -517,7 +522,11 @@ if __name__ == "__main__":
         display_relationship_vector()
         
         plt.figure(num_mean.number)
-        display_numerical_relationship()
+        display_means_relationship()
+        
+        plt.figure(cosine_sim.number)
+        cosine_similiarity()
+        
         test(epoch)
         with torch.no_grad():
             sample = torch.randn(64, 20).to(device)
