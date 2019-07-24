@@ -249,14 +249,62 @@ def display_deltas():
     
     return None
 
-def display_means_relationship():
+def cosine_similiarity():
     
+<<<<<<< HEAD
 #This code displays the means relationship between the means of each 
 #    handwritten digit. I am attempting to display the number as a 
 #    graph and image to see which display provide the most detailed
 #    information. 
     
+=======
+#This code compares the cosine similarity between the mean and the std, This is currently the only model
+    #That I was able to use osine similiary to represent but ideally I want to compare the cosine similairity 
+    #between the different number I keep getting error messages so I need to try another approach
+>>>>>>> 1c7d63cb5ee926dd677f08a6e16e3ea85424c207
     plt.clf()
+    for batch_idx, (data, which_digit) in enumerate(train_loader):
+        break
+    
+    fc21current,fc22current = model.encode(data.cuda().view(-1,784)) 
+    
+    fc21disp = torch.zeros((10,20)) 
+    
+    for i in range(10):
+        fc21disp[i,:] = \
+        torch.mean(fc21current[which_digit==i,:],0)
+
+    
+    cos=nn.CosineSimilarity(dim=1, eps=1e-6)
+    
+#    Cosine=torch.zeros(10,10)
+    
+#this loop I was aiming to compare all the numbers form 0 to 9 mean cosinesimilarity to get angular information
+#the j+1 was to compare different indexes that represented the 10 numbers
+    
+#the title you be Cosine Similiarity
+#x and y axis would be the number 0-9 and image would should a value of the angular relationship between each 
+#digit between the other digit
+# I trying to figure out the right way to present fc21disp to find the cosine difference as well as a for loop
+#that will create information that will go through and get the correct information of each number comparing the 
+#similiarity of each number
+#I would assume based on the shape of the number before training the value would be not similar but overtime the 
+#the values would start to become more similar and would give us information on what digits fetures align
+#    for i in range (10):
+#        for j in range (10):
+#            Cosine[i,j]=cos(fc21disp[i],fc21disp[j+1])
+#        In the commented out code I am trying to get the cosine difference of each number between each different 
+    #number and plot the result to a plot but I keep get an error message that the dimensions are off
+    #this is error messages IndexError: Dimension out of range (expected to be in range of [-1, 0], but got 1)
+#    plt.plot(angle_disp.cpu().detach().numpy())
+#    plt.pause(0.05)
+    
+    
+    
+def display_means_relationship():
+#This code displays the means relationship between the means of each handwritten digit. I am attempting 
+#to display the number as a graph and image to see which display provide the most detailed information. 
+#    plt.clf()
     for batch_idx, (data, which_digit) in enumerate(train_loader):
         break
     fc21current,fc22current = model.encode(data.cuda().view(-1,784))
@@ -267,17 +315,24 @@ def display_means_relationship():
         fc21disp[i,:] = \
         torch.sum(fc21current[which_digit==i,:],0)
     
-    disp=torch.zeros(10,1)
+    disp=torch.zeros(10,1) #this array takes the average of the means of each digit and give a 
+    #value for each number
     
+    
+    #this for loop take the mean of all 10 digits and places it into a 10 by 1 array
     for i in range (10):
-        disp[i]=torch.mean(fc21disp[i][:])
+        disp[i]=torch.mean(fc21disp[i][:],0)
+#    
+#    plt.plot(disp.cpu().detach().numpy())
+    iderasd=disp.cpu().detach().numpy() #this changes torch to a numpy
+        
+#    plt.imshow(iderasd.transpose()) #x-axis digit, y-axis average means
     
-    plt.plot(disp.cpu().detach().numpy(), 'o')
-
-    plt.imshow(disp.cpu().detach().numpy())
-    plt.colorbar()
-    plt.pause(0.5)
-    return 
+    #I am not sure the difference I would see before and after training
+    
+#    plt.colorbar()
+#    plt.pause(0.5)
+#    return 
 
     
 
@@ -309,9 +364,9 @@ def display_relationship_vector():
             dist_disp[i,j]=mu_dist[counter]
             counter=counter+1
 
-    plt.plot(dist_disp.transpose())
-    plt.pause(0.5)
-    return dist_disp
+#    plt.imshow(dist_disp)
+#    plt.pause(0.5)
+#    return dist_disp
     
     
 def display_as_histogram(ax):
@@ -503,7 +558,10 @@ if __name__ == "__main__":
         
     if "num_mean" not in locals():
         num_mean=plt.figure()
-        
+     
+    if "cosine_sim" not in locals():
+        cosine_sim=plt.figure()
+    
         
     for epoch in range(1, args.epochs + 1):
         train(epoch)
@@ -528,7 +586,11 @@ if __name__ == "__main__":
         display_relationship_vector()
         
         plt.figure(num_mean.number)
-        display_numerical_relationship()
+        display_means_relationship()
+        
+        plt.figure(cosine_sim.number)
+        cosine_similiarity()
+        
         test(epoch)
         with torch.no_grad():
             sample = torch.randn(64, 20).to(device)
