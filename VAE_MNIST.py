@@ -241,9 +241,9 @@ def cosine_similiarity():
 #similiarity of each number
 #I would assume based on the shape of the number before training the value would be not similar but overtime the 
 #the values would start to become more similar and would give us information on what digits fetures align
-    for i in range (10):
-        for j in range (10):
-        Cosine[i,j]=cos(fc21disp[i],fc21disp[j+1])
+#    for i in range (10):
+#        for j in range (10):
+#            Cosine[i,j]=cos(fc21disp[i],fc21disp[j+1])
 #        In the commented out code I am trying to get the cosine difference of each number between each different 
     #number and plot the result to a plot but I keep get an error message that the dimensions are off
     #this is error messages IndexError: Dimension out of range (expected to be in range of [-1, 0], but got 1)
@@ -255,7 +255,7 @@ def cosine_similiarity():
 def display_means_relationship():
 #This code displays the means relationship between the means of each handwritten digit. I am attempting 
 #to display the number as a graph and image to see which display provide the most detailed information. 
-    plt.clf()
+#    plt.clf()
     for batch_idx, (data, which_digit) in enumerate(train_loader):
         break
     fc21current,fc22current = model.encode(data.cuda().view(-1,784))
@@ -275,9 +275,9 @@ def display_means_relationship():
         disp[i]=torch.mean(fc21disp[i][:],0)
 #    
 #    plt.plot(disp.cpu().detach().numpy())
-        iderasd=disp.cpu().detach().numpy() #this changes torch to a numpy
+    iderasd=disp.cpu().detach().numpy() #this changes torch to a numpy
         
-    plt.imshow(iderasd.transpose()) #x-axis digit, y-axis average means
+#    plt.imshow(iderasd.transpose()) #x-axis digit, y-axis average means
     
     #I am not sure the difference I would see before and after training
     
@@ -315,7 +315,7 @@ def display_relationship_vector():
             dist_disp[i,j]=mu_dist[counter]
             counter=counter+1
 
-#    plt.plot(dist_disp.transpose())
+#    plt.imshow(dist_disp)
 #    plt.pause(0.5)
 #    return dist_disp
     
