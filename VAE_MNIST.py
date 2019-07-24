@@ -47,6 +47,7 @@ test_loader = torch.utils.data.DataLoader(
     batch_size=args.batch_size, shuffle=True, **kwargs)
 
 
+
 class VAE(nn.Module):
     def __init__(self):  # this sets up 5 linear layers
         super(VAE, self).__init__()
@@ -90,6 +91,48 @@ class VAE(nn.Module):
         sample = model.decode(z)
         return sample
 
+    def average_all_mu(self,test=False):
+        mu_all = torch.tensor(np.zeros((10,20)),dtype=torch.float)
+        
+        if not test:      
+            for batch_idx, (data, which_digit) in enumerate(train_loader):
+                if batch_idx > 467: #last batch only has 96 examples (#468)
+                    break
+                data.to(device)
+                
+                fc21current,fc22current = model.encode(data.cuda().view(-1,784))
+        #        print('fc21',fc21current.size())
+                for i in range(10):
+                    this_digit = which_digit == i
+        #            print('fc21',fc21current.size())
+        #            print(mu_all.size(),this_digit.size())
+        
+                    mu_all[i,:] = \
+                    torch.sum(fc21current[this_digit,:],0)
+                    mu_count = torch.sum(this_digit,0)
+            mu_all = mu_all/mu_count
+            self.mu0 = mu_all
+        else:
+            for batch_idx, (data, which_digit) in enumerate(test_loader):
+                if batch_idx > 467: #last batch only has 96 examples (#468)
+                    break
+                data.to(device)
+                
+                fc21current,fc22current = model.encode(data.cuda().view(-1,784))
+        #        print('fc21',fc21current.size())
+                for i in range(10):
+                    this_digit = which_digit == i
+        #            print('fc21',fc21current.size())
+        #            print(mu_all.size(),this_digit.size())
+        
+                    mu_all[i,:] = \
+                    torch.sum(fc21current[this_digit,:],0)
+                    mu_count = torch.sum(this_digit,0)
+
+            mu_all = mu_all/mu_count
+            self.mu0 = mu_all
+            self.mu_test = mu_all
+        return 
 
 if 'model' not in locals():
     print('new randomly initialized model...\n')
@@ -102,7 +145,9 @@ if False: # F9 this to start with a trained model.
 optimizer = optim.Adam(model.parameters(), lr=1e-5)
 beta = 0.5
 
- #this is a away to abreviate some steps
+
+
+#this is a avway to abbreviate some steps
 # Reconstruction + KL divergence losses summed over all elements and batch
 def loss_function(recon_x, x, mu, logvar, beta):
     
@@ -121,10 +166,6 @@ def loss_function(recon_x, x, mu, logvar, beta):
 def acquire_data_hook(self, input_tuple, output_tensor):    # Now THIS is a hook, again, look at the arguments;  a hook must have these. 
    global ACQUIRED_DATA
    ACQUIRED_DATA=output_tensor
-
-
-
-
 
 acq_hook_handle = model.fc4.register_forward_hook(acquire_data_hook)
 
@@ -210,8 +251,11 @@ def display_deltas():
 
 def display_means_relationship():
     
-#This code displays the means relationship between the means of each handwritten digit. I am attempting 
-#    to display the number as a graph and image to see which display provide the most detailed information. 
+#This code displays the means relationship between the means of each 
+#    handwritten digit. I am attempting to display the number as a 
+#    graph and image to see which display provide the most detailed
+#    information. 
+    
     plt.clf()
     for batch_idx, (data, which_digit) in enumerate(train_loader):
         break
