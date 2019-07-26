@@ -22,7 +22,7 @@ import time
 parser = argparse.ArgumentParser(description='VAE MNIST Example')
 parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                     help='input batch size for training (default: 128)')
-parser.add_argument('--epochs', type=int, default=10, metavar='N',
+parser.add_argument('--epochs', type=int, default=100, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='enables CUDA training')
@@ -130,7 +130,6 @@ class VAE(nn.Module):
                     mu_count = torch.sum(this_digit,0)
 
             mu_all = mu_all/mu_count
-            self.mu0 = mu_all
             self.mu_test = mu_all
         return 
 
@@ -250,18 +249,9 @@ def display_deltas():
     return None
 
 def cosine_similiarity():
-    
-<<<<<<< HEAD
-#This code displays the means relationship between the means of each 
-#    handwritten digit. I am attempting to display the number as a 
-#    graph and image to see which display provide the most detailed
-#    information. 
-    
-=======
 #This code compares the cosine similarity between the mean and the std, This is currently the only model
     #That I was able to use osine similiary to represent but ideally I want to compare the cosine similairity 
     #between the different number I keep getting error messages so I need to try another approach
->>>>>>> 1c7d63cb5ee926dd677f08a6e16e3ea85424c207
     plt.clf()
     for batch_idx, (data, which_digit) in enumerate(train_loader):
         break
@@ -566,30 +556,29 @@ if __name__ == "__main__":
     for epoch in range(1, args.epochs + 1):
         train(epoch)
 
-#        display_as_histogram(fc2axes)
-        display_bottleneck(fc2axes)
-        plt.figure(fc4fig.number)
-        display_images(ACQUIRED_DATA)
-        
-        display_as_histogram(hist_axes)
-        
-        plt.figure(fc2fig.number)
-        display_bottleneck(fc2axes)
-        
-        plt.figure(fc4fig.number)
-        display_images(ACQUIRED_DATA)
-        
-        plt.figure(corr_fig.number)
-        display_corr()
-        
-        plt.figure(con_fig.number)
-        display_relationship_vector()
-        
-        plt.figure(num_mean.number)
-        display_means_relationship()
-        
-        plt.figure(cosine_sim.number)
-        cosine_similiarity()
+#        display_bottleneck(fc2axes)
+#        plt.figure(fc4fig.number)
+#        display_images(ACQUIRED_DATA)
+#        
+#        display_as_histogram(hist_axes)
+#        
+#        plt.figure(fc2fig.number)
+#        display_bottleneck(fc2axes)
+#        
+#        plt.figure(fc4fig.number)
+#        display_images(ACQUIRED_DATA)
+#        
+#        plt.figure(corr_fig.number)
+#        display_corr()
+#        
+#        plt.figure(con_fig.number)
+#        display_relationship_vector()
+#        
+#        plt.figure(num_mean.number)
+#        display_means_relationship()
+#        
+#        plt.figure(cosine_sim.number)
+#        cosine_similiarity()
         
         test(epoch)
         with torch.no_grad():
