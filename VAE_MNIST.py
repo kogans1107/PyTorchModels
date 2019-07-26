@@ -287,28 +287,23 @@ def the_new_cosine_similiarity():
     
     #This is a couple explames of how I want ot have a for loop to take in this information and not manually 
     #each number 
-    num_disp=torch.zeros(10,20)
-    for ni in range (10):
-        num_disp[i] =mycos(nlist[0],nlist[i]) #this code finds the similiarity and return two numbers
-    
-    return num_disp    
+    num_disp=torch.zeros(10,10)
+    for i in range (10):
+        for j in range (10):
+            num_disp[i,j] =mycos(nlist[i],nlist[j]) #this code finds the similiarity and return two numbers
+    plt.title('Cosine_Sim')
+    plt.imshow(num_disp.cpu().detach().numpy())
+            
+    return   
     #this is my attempt to show a better ideal of what I am aiming for in this code but not quite there
     
     
 def cosine_similiarity():
-<<<<<<< HEAD
-    
-    
 
-=======
->>>>>>> 48398ed937c76b9897e9b9cb65132b9c4c2d7892
 #This code compares the cosine similarity between the mean and the std, This is currently the only model
     #That I was able to use cosine similiary to represent but ideally I want to compare the cosine similairity 
     #between the different number I keep getting error messages so I need to try another approach
-<<<<<<< HEAD
 
-=======
->>>>>>> 48398ed937c76b9897e9b9cb65132b9c4c2d7892
     plt.clf()
     for batch_idx, (data, which_digit) in enumerate(train_loader):
         break
