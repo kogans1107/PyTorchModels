@@ -51,11 +51,13 @@ test_loader = torch.utils.data.DataLoader(
 class VAE(nn.Module):
     def __init__(self):  # this sets up 5 linear layers
         super(VAE, self).__init__()
+        
+        z_dimension = 20
 
         self.fc1 = nn.Linear(784, 400) # stacked MNIST to 400
-        self.fc21 = nn.Linear(400, 20) # two hidden low D
-        self.fc22 = nn.Linear(400, 20) # layers, same size
-        self.fc3 = nn.Linear(20, 400)  
+        self.fc21 = nn.Linear(400, z_dimension) # two hidden low D
+        self.fc22 = nn.Linear(400, z_dimension) # layers, same size
+        self.fc3 = nn.Linear(z_dimension, 400)  
         self.fc4 = nn.Linear(400, 784)
 
     def encode(self, x): 
@@ -249,10 +251,10 @@ def display_deltas():
     return None
 
 def the_new_cosine_similiarity():
-    #This code take the 20 vectors representation of each number and compares the cosine similarity between
-    #each number. This code I thinks is a long piece of code that lays out the idea I have but I believe there
-    #is a more efficient way of representing it
-    
+    #This code take the 20 vectors representation of each digit and 
+    #  compares the cosine similarity between each digit. This code
+    # This code shows how I am thinking, but I believe there
+    #  is a more efficient way of implementing my idea.     
     
     for batch_idx, (data, which_digit) in enumerate(train_loader):
         break
@@ -267,25 +269,29 @@ def the_new_cosine_similiarity():
             torch.mean(fc21current[which_digit==i,:],0)
     
     #this code create new tensor separte by each digit
-    n0=torch.reshape(fc21dis[0], (2,10))
-    n1=torch.reshape(fc21dis[1], (2,10))
-    n2=torch.reshape(fc21dis[2], (2,10))
-    n3=torch.reshape(fc21dis[3], (2,10))
-    n4=torch.reshape(fc21dis[4], (2,10))
-    n5=torch.reshape(fc21dis[5], (2,10))
-    n6=torch.reshape(fc21dis[6], (2,10))
-    n7=torch.reshape(fc21dis[7], (2,10))
-    n8=torch.reshape(fc21dis[8], (2,10))
-    n9=torch.reshape(fc21dis[9], (2,10))
+    nlist = []
+    for i in range(10):
+        nlist.append(fc21disp[i,:])
+#    n0=torch.reshape(fc21disp[0], (2,10))
+#    n1=torch.reshape(fc21disp[1], (2,10))
+#    n2=torch.reshape(fc21disp[2], (2,10))
+#    n3=torch.reshape(fc21disp[3], (2,10))
+#    n4=torch.reshape(fc21disp[4], (2,10))
+#    n5=torch.reshape(fc21disp[5], (2,10))
+#    n6=torch.reshape(fc21disp[6], (2,10))
+#    n7=torch.reshape(fc21disp[7], (2,10))
+#    n8=torch.reshape(fc21disp[8], (2,10))
+#    n9=torch.reshape(fc21disp[9], (2,10))
     
-    cos=nn.CosineSimilarity()
+    mycos=nn.CosineSimilarity(dim=0)
     
     #This is a couple explames of how I want ot have a for loop to take in this information and not manually 
     #each number 
     num_disp=torch.zeros(10,20)
     for ni in range (10):
-        num_disp[0][:2]=cos(n0,ni) #this code finds the similiarity and return two numbers
-        
+        num_disp[i] =mycos(nlist[0],nlist[i]) #this code finds the similiarity and return two numbers
+    
+    return num_disp    
     #this is my attempt to show a better ideal of what I am aiming for in this code but not quite there
     
     
@@ -369,8 +375,8 @@ def display_means_relationship():
 
 def display_relationship_vector():
 #
-#  This plots the distance between each digit and every other 
-#    pair of digits. Interestingly, these distances are all nearly 
+#  This plots the distance between each pair of digits. 
+#      Interestingly, these distances are all nearly 
 #    the same in model VAE20190716_1551, consistent with the mean
 #    encodings being distributed on a 20-sphere. 
 #
@@ -395,9 +401,9 @@ def display_relationship_vector():
             dist_disp[i,j]=mu_dist[counter]
             counter=counter+1
 
-#    plt.imshow(dist_disp)
-#    plt.pause(0.5)
-#    return dist_disp
+    plt.imshow(dist_disp)
+    plt.pause(0.5)
+    return dist_disp
     
     
 def display_as_histogram(ax):
