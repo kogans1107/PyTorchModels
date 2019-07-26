@@ -248,6 +248,47 @@ def display_deltas():
     
     return None
 
+def the_new_cosine_similiarity():
+    #This code take the 20 vectors representation of each number and compares the cosine similarity between
+    #each number. This code I thinks is a long piece of code that lays out the idea I have but I believe there
+    #is a more efficient way of representing it
+    
+    
+    for batch_idx, (data, which_digit) in enumerate(train_loader):
+        break
+        
+    
+    fc21current,fc22current = model.encode(data.cuda().view(-1,784))
+    
+    fc21disp = torch.zeros((10,20))
+    
+    for i in range(10):
+            fc21disp[i,:] = \
+            torch.mean(fc21current[which_digit==i,:],0)
+    
+    #this code create new tensor separte by each digit
+    n0=torch.reshape(fc21dis[0], (2,10))
+    n1=torch.reshape(fc21dis[1], (2,10))
+    n2=torch.reshape(fc21dis[2], (2,10))
+    n3=torch.reshape(fc21dis[3], (2,10))
+    n4=torch.reshape(fc21dis[4], (2,10))
+    n5=torch.reshape(fc21dis[5], (2,10))
+    n6=torch.reshape(fc21dis[6], (2,10))
+    n7=torch.reshape(fc21dis[7], (2,10))
+    n8=torch.reshape(fc21dis[8], (2,10))
+    n9=torch.reshape(fc21dis[9], (2,10))
+    
+    cos=nn.CosineSimilarity()
+    
+    #This is a couple explames of how I want ot have a for loop to take in this information and not manually 
+    #each number 
+    num_disp=torch.zeros(10,20)
+    for ni in range (10):
+        num_disp[0][:2]=cos(n0,ni) #this code finds the similiarity and return two numbers
+        
+    #this is my attempt to show a better ideal of what I am aiming for in this code but not quite there
+    
+    
 def cosine_similiarity():
 #This code compares the cosine similarity between the mean and the std, This is currently the only model
     #That I was able to use osine similiary to represent but ideally I want to compare the cosine similairity 
@@ -267,7 +308,7 @@ def cosine_similiarity():
     
     cos=nn.CosineSimilarity(dim=1, eps=1e-6)
     
-#    Cosine=torch.zeros(10,10)
+    Cosine=torch.zeros(10,10)
     
 #this loop I was aiming to compare all the numbers form 0 to 9 mean cosinesimilarity to get angular information
 #the j+1 was to compare different indexes that represented the 10 numbers
