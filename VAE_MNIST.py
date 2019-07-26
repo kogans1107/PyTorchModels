@@ -35,7 +35,7 @@ args.cuda = not args.no_cuda and torch.cuda.is_available()
 
 torch.manual_seed(args.seed)
 
-device = torch.device("cuda" if args.cuda else "cpu")
+device = torch.device("cuda" if args.cuda else "aya")
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 train_loader = torch.utils.data.DataLoader(
@@ -292,17 +292,12 @@ def the_new_cosine_similiarity():
     
 def cosine_similiarity():
     
-<<<<<<< HEAD
-#This code displays the means relationship between the means of each 
-#    handwritten digit. I am attempting to display the number as a 
-#    graph and image to see which display provide the most detailed
-#    information. 
     
-=======
+
 #This code compares the cosine similarity between the mean and the std, This is currently the only model
-    #That I was able to use osine similiary to represent but ideally I want to compare the cosine similairity 
+    #That I was able to use cosine similiary to represent but ideally I want to compare the cosine similairity 
     #between the different number I keep getting error messages so I need to try another approach
->>>>>>> 1c7d63cb5ee926dd677f08a6e16e3ea85424c207
+
     plt.clf()
     for batch_idx, (data, which_digit) in enumerate(train_loader):
         break
