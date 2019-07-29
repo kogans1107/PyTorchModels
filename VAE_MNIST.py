@@ -22,7 +22,7 @@ import time
 parser = argparse.ArgumentParser(description='VAE MNIST Example')
 parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                     help='input batch size for training (default: 128)')
-parser.add_argument('--epochs', type=int, default=100, metavar='N',
+parser.add_argument('--epochs', type=int, default=10, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='enables CUDA training')
@@ -49,15 +49,15 @@ test_loader = torch.utils.data.DataLoader(
 
 
 class VAE(nn.Module):
-    def __init__(self):  # this sets up 5 linear layers
+    def __init__(self,dim=20):  # this sets up 5 linear layers
         super(VAE, self).__init__()
         
-        z_dimension = 20
+        self.z_dimension = dim
 
         self.fc1 = nn.Linear(784, 400) # stacked MNIST to 400
-        self.fc21 = nn.Linear(400, z_dimension) # two hidden low D
-        self.fc22 = nn.Linear(400, z_dimension) # layers, same size
-        self.fc3 = nn.Linear(z_dimension, 400)  
+        self.fc21 = nn.Linear(400, self.z_dimension) # two hidden low D
+        self.fc22 = nn.Linear(400, self.z_dimension) # layers, same size
+        self.fc3 = nn.Linear(self.z_dimension, 400)  
         self.fc4 = nn.Linear(400, 784)
 
     def encode(self, x): 
@@ -170,7 +170,14 @@ def acquire_data_hook(self, input_tuple, output_tensor):    # Now THIS is a hook
 
 acq_hook_handle = model.fc4.register_forward_hook(acquire_data_hook)
 
-def display_images(img, nr=8, nc=16, s=28):
+def display_fc2_layer(self, fc2_input_tuple,fc2_output_tensor):
+    global Shape
+    Shape=fc2_output_tensor
+ 
+    
+fc2_info=model.fc22.register_forward_hook(display_fc2_layer)
+
+def display_images(img, nr=8, nc=16, s1=28, s2=28):
     # img is a tensor containing a stack of images, shaped the 
     #  way pytorch does it, i.e. number of examples by number of 
     #  channels by number of rows by number of columns. The MNIST images are
@@ -183,15 +190,16 @@ def display_images(img, nr=8, nc=16, s=28):
     #
 
     img_np=img.cpu().detach().numpy()
-    new_img=np.reshape(img_np, (nr*nc,s,s))
-    disp=np.zeros((nr*s,nc*s))
+    new_img=np.reshape(img_np, (nr*nc,s1,s2))
+    disp=np.zeros((nr*s1,nc*s2))
   
     for i in range(nr):
         for j in range(nc):
                 read_data = int(nc*i+j)
-                r0=i*s
-                c0=j*s
-                disp[r0:(r0+s),c0:(c0+s)]=new_img[read_data,:,:]
+                r0=i*s1
+                c0=j*s2
+                disp[r0:(r0+s1),c0:(c0+s2)]=new_img[read_data,:,:]
+    plt.title('Image Display')
     plt.imshow(disp)
     plt.pause(0.05) # makes sure plt flushes its buffer. 
     
@@ -250,7 +258,7 @@ def display_deltas():
     
     return None
 
-def the_new_cosine_similiarity():
+def disp_cos_sim():
     #This code take the 20 vectors representation of each digit and 
     #  compares the cosine similarity between each digit. This code
     # This code shows how I am thinking, but I believe there
@@ -259,7 +267,6 @@ def the_new_cosine_similiarity():
     for batch_idx, (data, which_digit) in enumerate(train_loader):
         break
         
-    
     fc21current,fc22current = model.encode(data.cuda().view(-1,784))
     
     fc21disp = torch.zeros((10,20))
@@ -272,75 +279,15 @@ def the_new_cosine_similiarity():
     nlist = []
     for i in range(10):
         nlist.append(fc21disp[i,:])
-#    n0=torch.reshape(fc21disp[0], (2,10))
-#    n1=torch.reshape(fc21disp[1], (2,10))
-#    n2=torch.reshape(fc21disp[2], (2,10))
-#    n3=torch.reshape(fc21disp[3], (2,10))
-#    n4=torch.reshape(fc21disp[4], (2,10))
-#    n5=torch.reshape(fc21disp[5], (2,10))
-#    n6=torch.reshape(fc21disp[6], (2,10))
-#    n7=torch.reshape(fc21disp[7], (2,10))
-#    n8=torch.reshape(fc21disp[8], (2,10))
-#    n9=torch.reshape(fc21disp[9], (2,10))
+
     
     mycos=nn.CosineSimilarity(dim=0)
-    
-    #This is a couple explames of how I want ot have a for loop to take in this information and not manually 
-    #each number 
     num_disp=torch.zeros(10,10)
     for i in range (10):
         for j in range (10):
             num_disp[i,j] =mycos(nlist[i],nlist[j]) #this code finds the similiarity and return two numbers
     plt.title('Cosine_Sim')
     plt.imshow(num_disp.cpu().detach().numpy())
-            
-    return   
-    #this is my attempt to show a better ideal of what I am aiming for in this code but not quite there
-    
-    
-def cosine_similiarity():
-
-#This code compares the cosine similarity between the mean and the std, This is currently the only model
-    #That I was able to use cosine similiary to represent but ideally I want to compare the cosine similairity 
-    #between the different number I keep getting error messages so I need to try another approach
-
-    plt.clf()
-    for batch_idx, (data, which_digit) in enumerate(train_loader):
-        break
-    
-    fc21current,fc22current = model.encode(data.cuda().view(-1,784)) 
-    
-    fc21disp = torch.zeros((10,20)) 
-    
-    for i in range(10):
-        fc21disp[i,:] = \
-        torch.mean(fc21current[which_digit==i,:],0)
-
-    
-    cos=nn.CosineSimilarity(dim=1, eps=1e-6)
-    
-    Cosine=torch.zeros(10,10)
-    
-#this loop I was aiming to compare all the numbers form 0 to 9 mean cosinesimilarity to get angular information
-#the j+1 was to compare different indexes that represented the 10 numbers
-    
-#the title you be Cosine Similiarity
-#x and y axis would be the number 0-9 and image would should a value of the angular relationship between each 
-#digit between the other digit
-# I trying to figure out the right way to present fc21disp to find the cosine difference as well as a for loop
-#that will create information that will go through and get the correct information of each number comparing the 
-#similiarity of each number
-#I would assume based on the shape of the number before training the value would be not similar but overtime the 
-#the values would start to become more similar and would give us information on what digits fetures align
-#    for i in range (10):
-#        for j in range (10):
-#            Cosine[i,j]=cos(fc21disp[i],fc21disp[j+1])
-#        In the commented out code I am trying to get the cosine difference of each number between each different 
-    #number and plot the result to a plot but I keep get an error message that the dimensions are off
-    #this is error messages IndexError: Dimension out of range (expected to be in range of [-1, 0], but got 1)
-#    plt.plot(angle_disp.cpu().detach().numpy())
-#    plt.pause(0.05)
-    
     
     
 def display_means_relationship():
@@ -367,10 +314,9 @@ def display_means_relationship():
 #    
 #    plt.plot(disp.cpu().detach().numpy())
     iderasd=disp.cpu().detach().numpy() #this changes torch to a numpy
-        
-#    plt.imshow(iderasd.transpose()) #x-axis digit, y-axis average means
+    plt.title('Means Correlationship')    
+    plt.imshow(iderasd.transpose()) #x-axis digit, y-axis average means
     
-    #I am not sure the difference I would see before and after training
     
 #    plt.colorbar()
 #    plt.pause(0.5)
@@ -378,7 +324,7 @@ def display_means_relationship():
 
     
 
-def display_relationship_vector():
+def disp_vector_dist():
 #
 #  This plots the distance between each pair of digits. 
 #      Interestingly, these distances are all nearly 
@@ -405,10 +351,10 @@ def display_relationship_vector():
         for j in range (i+1,10):
             dist_disp[i,j]=mu_dist[counter]
             counter=counter+1
-
+    plt.title('Vector Distances')
     plt.imshow(dist_disp)
     plt.pause(0.5)
-    return dist_disp
+
     
     
 def display_as_histogram(ax):
@@ -540,7 +486,7 @@ def train(epoch):
 
     torch.save(model.state_dict(),'VAEresults' + str(epoch)+'_VAE' + date_for_filename())
 
-
+#
 #    display_images(ACQUIRED_DATA)
     
 
@@ -583,28 +529,28 @@ def date_for_filename():
 
 
 if __name__ == "__main__":
-    if "fc2fig" not in locals():
-        fc2fig, fc2axes = plt.subplots(2,1)
-
-    if "fc4fig" not in locals():
-        fc4fig = plt.figure()
- 
-    if "hist_fig" not in locals():
-        hist_fig, hist_axes = plt.subplots(3,4)
-
-    if "corr_fig" not in locals():
-        corr_fig, corr_axes = plt.subplots(1,1)
-        
-    if "con_fig" not in locals():
-        con_fig=plt.figure()
-        
-    if "num_mean" not in locals():
-        num_mean=plt.figure()
-     
-    if "cosine_sim" not in locals():
-        cosine_sim=plt.figure()
-    
-        
+#    if "fc2fig" not in locals():
+#        fc2fig, fc2axes = plt.subplots(2,1)
+#
+#    if "fc4fig" not in locals():
+#        fc4fig = plt.figure()
+# 
+#    if "hist_fig" not in locals():
+#        hist_fig, hist_axes = plt.subplots(3,4)
+#
+#    if "corr_fig" not in locals():
+#        corr_fig, corr_axes = plt.subplots(1,1)
+#        
+#    if "con_fig" not in locals():
+#        con_fig=plt.figure()
+#        
+#    if "num_mean" not in locals():
+#        num_mean=plt.figure()
+#     
+#    if "cosine_sim" not in locals():
+#        cosine_sim=plt.figure()
+#    
+#        
     for epoch in range(1, args.epochs + 1):
         train(epoch)
 
