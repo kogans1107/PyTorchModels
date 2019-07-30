@@ -143,7 +143,7 @@ if False: # F9 this to start with a trained model.
     model.load_state_dict(torch.load('VAEresults100_VAE20190722_1316')) # KTO favorite
     model.load_state_dict(torch.load('VAE20190716_1551')) # WJP favorite
 
-optimizer = optim.Adam(model.parameters(), lr=1e-7)
+optimizer = optim.Adam(model.parameters(), lr=1e-5)
 beta = 0.5
 
 
