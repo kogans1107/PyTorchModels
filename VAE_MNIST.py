@@ -22,7 +22,7 @@ import time
 parser = argparse.ArgumentParser(description='VAE MNIST Example')
 parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                     help='input batch size for training (default: 128)')
-parser.add_argument('--epochs', type=int, default=100, metavar='N',
+parser.add_argument('--epochs', type=int, default=10, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='enables CUDA training')
@@ -52,12 +52,12 @@ class VAE(nn.Module):
     def __init__(self):  # this sets up 5 linear layers
         super(VAE, self).__init__()
         
-        z_dimension = 20
+        self.z_dimension = 12
 
         self.fc1 = nn.Linear(784, 400) # stacked MNIST to 400
-        self.fc21 = nn.Linear(400, z_dimension) # two hidden low D
-        self.fc22 = nn.Linear(400, z_dimension) # layers, same size
-        self.fc3 = nn.Linear(z_dimension, 400)  
+        self.fc21 = nn.Linear(400, self.z_dimension) # two hidden low D
+        self.fc22 = nn.Linear(400, self.z_dimension) # layers, same size
+        self.fc3 = nn.Linear(self.z_dimension, 400)  
         self.fc4 = nn.Linear(400, 784)
 
     def encode(self, x): 
@@ -94,7 +94,7 @@ class VAE(nn.Module):
         return sample
 
     def average_all_mu(self,test=False):
-        mu_all = torch.tensor(np.zeros((10,20)),dtype=torch.float)
+        mu_all = torch.tensor(np.zeros((10,self.z_dimension)),dtype=torch.float)
         
         if not test:      
             for batch_idx, (data, which_digit) in enumerate(train_loader):
@@ -143,7 +143,7 @@ if False: # F9 this to start with a trained model.
     model.load_state_dict(torch.load('VAEresults100_VAE20190722_1316')) # KTO favorite
     model.load_state_dict(torch.load('VAE20190716_1551')) # WJP favorite
 
-optimizer = optim.Adam(model.parameters(), lr=1e-5)
+optimizer = optim.Adam(model.parameters(), lr=1e-7)
 beta = 0.5
 
 
@@ -203,8 +203,8 @@ def display_bottleneck(axes):
 
     fc21current,fc22current = model.encode(data.cuda().view(-1,784))
 
-    fc21disp = np.zeros((10,20))
-    fc22disp = np.zeros((10,20))
+    fc21disp = np.zeros((10,model.z_dimension))
+    fc22disp = np.zeros((10,model.z_dimension))
 
 
     for i in range(10):
@@ -233,13 +233,13 @@ def display_deltas():
     
     fc21current,fc22current = model.encode(data.cuda().view(-1,784))
     
-    fc21disp = torch.zeros((10,20))
+    fc21disp = torch.zeros((10,model.z_dimension))
     
     for i in range(10):
         fc21disp[i,:] = \
         torch.mean(fc21current[which_digit==i,:],0)
 
-    delt_disp=np.zeros((10,10,20))  # There a 45 unique 20-vectors 
+    delt_disp=np.zeros((10,10,model.z_dimension))  # There a 45 unique 20-vectors 
                                     #  describing the differences
                                     #  between average encodings 
                                     #  for each digit. 
@@ -262,7 +262,7 @@ def the_new_cosine_similiarity():
     
     fc21current,fc22current = model.encode(data.cuda().view(-1,784))
     
-    fc21disp = torch.zeros((10,20))
+    fc21disp = torch.zeros((10,model.z_dimension))
     
     for i in range(10):
             fc21disp[i,:] = \
@@ -272,24 +272,15 @@ def the_new_cosine_similiarity():
     nlist = []
     for i in range(10):
         nlist.append(fc21disp[i,:])
-#    n0=torch.reshape(fc21disp[0], (2,10))
-#    n1=torch.reshape(fc21disp[1], (2,10))
-#    n2=torch.reshape(fc21disp[2], (2,10))
-#    n3=torch.reshape(fc21disp[3], (2,10))
-#    n4=torch.reshape(fc21disp[4], (2,10))
-#    n5=torch.reshape(fc21disp[5], (2,10))
-#    n6=torch.reshape(fc21disp[6], (2,10))
-#    n7=torch.reshape(fc21disp[7], (2,10))
-#    n8=torch.reshape(fc21disp[8], (2,10))
-#    n9=torch.reshape(fc21disp[9], (2,10))
     
     mycos=nn.CosineSimilarity(dim=0)
     
     #This is a couple explames of how I want ot have a for loop to take in this information and not manually 
     #each number 
-    num_disp=torch.zeros(10,20)
+    num_disp=torch.zeros(10,10)
     for ni in range (10):
-        num_disp[i] =mycos(nlist[0],nlist[i]) #this code finds the similiarity and return two numbers
+        for nj in range(10):
+            num_disp[ni,nj] =mycos(nlist[ni],nlist[nj]) #this code finds the similiarity and return two numbers
     
     return num_disp    
     #this is my attempt to show a better ideal of what I am aiming for in this code but not quite there
@@ -305,7 +296,7 @@ def cosine_similiarity():
     
     fc21current,fc22current = model.encode(data.cuda().view(-1,784)) 
     
-    fc21disp = torch.zeros((10,20)) 
+    fc21disp = torch.zeros((10,model.z_dimension)) 
     
     for i in range(10):
         fc21disp[i,:] = \
@@ -346,7 +337,7 @@ def display_means_relationship():
         break
     fc21current,fc22current = model.encode(data.cuda().view(-1,784))
     
-    fc21disp = torch.zeros((10,20))
+    fc21disp = torch.zeros((10,model.z_dimension))
     
     for i in range(10):
         fc21disp[i,:] = \
@@ -385,7 +376,7 @@ def display_relationship_vector():
     plt.clf()
     fc21current,fc22current = model.encode(data.cuda().view(-1,784))
     
-    fc21disp = torch.zeros((10,20))
+    fc21disp = torch.zeros((10,model.z_dimension))
     
     for i in range(10):
         fc21disp[i,:] = \
@@ -445,8 +436,8 @@ def display_corr():
     
     fc21current,fc22current = model.encode(data.cuda().view(-1,784))
 
-    fc21disp = np.zeros((10,20))
-    fc22disp = np.zeros((10,20))
+    fc21disp = np.zeros((10,model.z_dimension))
+    fc22disp = np.zeros((10,model.z_dimension))
 
     for i in range(10):
         fc21disp[i,:] = \
@@ -478,8 +469,8 @@ def display_transition(n0,n1):
     
     fc21current,fc22current = model.encode(data.cuda().view(-1,784))
 
-    fc21disp = np.zeros((2,20))
-#    fc22disp = np.zeros((2,20))
+    fc21disp = np.zeros((2,model.z_dimension))
+#    fc22disp = np.zeros((2,model.z_dimension))
 
     for i,n in enumerate([n0 ,n1]):
         fc21disp[i,:] = \
@@ -490,7 +481,7 @@ def display_transition(n0,n1):
 #               cpu().detach().numpy(),axis=0)
 
 
-    z = torch.zeros((10,20)).to(device)  
+    z = torch.zeros((10,model.z_dimension)).to(device)  
     for i in range(10):
         
         alpha = -np.log(11/(i+1)-1);
@@ -578,28 +569,28 @@ def date_for_filename():
 
 
 if __name__ == "__main__":
-    if "fc2fig" not in locals():
-        fc2fig, fc2axes = plt.subplots(2,1)
-
-    if "fc4fig" not in locals():
-        fc4fig = plt.figure()
- 
-    if "hist_fig" not in locals():
-        hist_fig, hist_axes = plt.subplots(3,4)
-
-    if "corr_fig" not in locals():
-        corr_fig, corr_axes = plt.subplots(1,1)
-        
-    if "con_fig" not in locals():
-        con_fig=plt.figure()
-        
-    if "num_mean" not in locals():
-        num_mean=plt.figure()
-     
-    if "cosine_sim" not in locals():
-        cosine_sim=plt.figure()
-    
-        
+#    if "fc2fig" not in locals():
+#        fc2fig, fc2axes = plt.subplots(2,1)
+#
+#    if "fc4fig" not in locals():
+#        fc4fig = plt.figure()
+# 
+#    if "hist_fig" not in locals():
+#        hist_fig, hist_axes = plt.subplots(3,4)
+#
+#    if "corr_fig" not in locals():
+#        corr_fig, corr_axes = plt.subplots(1,1)
+#        
+#    if "con_fig" not in locals():
+#        con_fig=plt.figure()
+#        
+#    if "num_mean" not in locals():
+#        num_mean=plt.figure()
+#     
+#    if "cosine_sim" not in locals():
+#        cosine_sim=plt.figure()
+#    
+    fig,ax = plt.subplots(3,3)
     for epoch in range(1, args.epochs + 1):
         train(epoch)
 
@@ -628,8 +619,17 @@ if __name__ == "__main__":
 #        cosine_similiarity()
         
         test(epoch)
-        with torch.no_grad():
-            sample = torch.randn(64, 20).to(device)
-            sample = model.decode(sample).cpu()
-            save_image(sample.view(64, 1, 28, 28),
-                       'VAEresults/sample_' + str(epoch) + '.png')
+        model.average_all_mu(test=True)
+        
+        for i in range(3):
+            for j in range(3):
+                this_digit = i*3+j+1
+                img=model.decode(model.mu_test[this_digit,:].to(device)).cpu().detach().numpy().reshape((28,28))
+                ax[i,j].imshow(img)
+                ax[i,j].set_title(str(this_digit))
+        plt.pause(0.5)
+#        with torch.no_grad():
+#            sample = torch.randn(64, 20).to(device)
+#            sample = model.decode(sample).cpu()
+#            save_image(sample.view(64, 1, 28, 28),
+#                       'VAEresults/sample_' + str(epoch) + '.png')
