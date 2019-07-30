@@ -35,7 +35,7 @@ args.cuda = not args.no_cuda and torch.cuda.is_available()
 
 torch.manual_seed(args.seed)
 
-device = torch.device("cuda" if args.cuda else "cpu")
+device = torch.device("cuda" if args.cuda else "aya")
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 train_loader = torch.utils.data.DataLoader(
@@ -49,10 +49,10 @@ test_loader = torch.utils.data.DataLoader(
 
 
 class VAE(nn.Module):
-    def __init__(self):  # this sets up 5 linear layers
+    def __init__(self,dim=20):  # this sets up 5 linear layers
         super(VAE, self).__init__()
-        
-        self.z_dimension = 12
+
+        self.z_dimension = dim
 
         self.fc1 = nn.Linear(784, 400) # stacked MNIST to 400
         self.fc21 = nn.Linear(400, self.z_dimension) # two hidden low D
@@ -170,7 +170,14 @@ def acquire_data_hook(self, input_tuple, output_tensor):    # Now THIS is a hook
 
 acq_hook_handle = model.fc4.register_forward_hook(acquire_data_hook)
 
-def display_images(img, nr=8, nc=16, s=28):
+def display_fc2_layer(self, fc2_input_tuple,fc2_output_tensor):
+    global Shape
+    Shape=fc2_output_tensor
+ 
+    
+fc2_info=model.fc22.register_forward_hook(display_fc2_layer)
+
+def display_images(img, nr=8, nc=16, s1=28, s2=28):
     # img is a tensor containing a stack of images, shaped the 
     #  way pytorch does it, i.e. number of examples by number of 
     #  channels by number of rows by number of columns. The MNIST images are
@@ -183,15 +190,16 @@ def display_images(img, nr=8, nc=16, s=28):
     #
 
     img_np=img.cpu().detach().numpy()
-    new_img=np.reshape(img_np, (nr*nc,s,s))
-    disp=np.zeros((nr*s,nc*s))
+    new_img=np.reshape(img_np, (nr*nc,s1,s2))
+    disp=np.zeros((nr*s1,nc*s2))
   
     for i in range(nr):
         for j in range(nc):
                 read_data = int(nc*i+j)
-                r0=i*s
-                c0=j*s
-                disp[r0:(r0+s),c0:(c0+s)]=new_img[read_data,:,:]
+                r0=i*s1
+                c0=j*s2
+                disp[r0:(r0+s1),c0:(c0+s2)]=new_img[read_data,:,:]
+    plt.title('Image Display')
     plt.imshow(disp)
     plt.pause(0.05) # makes sure plt flushes its buffer. 
     
@@ -250,7 +258,7 @@ def display_deltas():
     
     return None
 
-def the_new_cosine_similiarity():
+def disp_cos_sim():
     #This code take the 20 vectors representation of each digit and 
     #  compares the cosine similarity between each digit. This code
     # This code shows how I am thinking, but I believe there
@@ -259,7 +267,6 @@ def the_new_cosine_similiarity():
     for batch_idx, (data, which_digit) in enumerate(train_loader):
         break
         
-    
     fc21current,fc22current = model.encode(data.cuda().view(-1,784))
     
     fc21disp = torch.zeros((10,model.z_dimension))
@@ -303,30 +310,13 @@ def cosine_similiarity():
         torch.mean(fc21current[which_digit==i,:],0)
 
     
-    cos=nn.CosineSimilarity(dim=1, eps=1e-6)
-    
-    Cosine=torch.zeros(10,10)
-    
-#this loop I was aiming to compare all the numbers form 0 to 9 mean cosinesimilarity to get angular information
-#the j+1 was to compare different indexes that represented the 10 numbers
-    
-#the title you be Cosine Similiarity
-#x and y axis would be the number 0-9 and image would should a value of the angular relationship between each 
-#digit between the other digit
-# I trying to figure out the right way to present fc21disp to find the cosine difference as well as a for loop
-#that will create information that will go through and get the correct information of each number comparing the 
-#similiarity of each number
-#I would assume based on the shape of the number before training the value would be not similar but overtime the 
-#the values would start to become more similar and would give us information on what digits fetures align
-#    for i in range (10):
-#        for j in range (10):
-#            Cosine[i,j]=cos(fc21disp[i],fc21disp[j+1])
-#        In the commented out code I am trying to get the cosine difference of each number between each different 
-    #number and plot the result to a plot but I keep get an error message that the dimensions are off
-    #this is error messages IndexError: Dimension out of range (expected to be in range of [-1, 0], but got 1)
-#    plt.plot(angle_disp.cpu().detach().numpy())
-#    plt.pause(0.05)
-    
+    mycos=nn.CosineSimilarity(dim=0)
+    num_disp=torch.zeros(10,10)
+    for i in range (10):
+        for j in range (10):
+            num_disp[i,j] =mycos(nlist[i],nlist[j]) #this code finds the similiarity and return two numbers
+    plt.title('Cosine_Sim')
+    plt.imshow(num_disp.cpu().detach().numpy())
     
     
 def display_means_relationship():
@@ -353,10 +343,9 @@ def display_means_relationship():
 #    
 #    plt.plot(disp.cpu().detach().numpy())
     iderasd=disp.cpu().detach().numpy() #this changes torch to a numpy
-        
-#    plt.imshow(iderasd.transpose()) #x-axis digit, y-axis average means
+    plt.title('Means Correlationship')    
+    plt.imshow(iderasd.transpose()) #x-axis digit, y-axis average means
     
-    #I am not sure the difference I would see before and after training
     
 #    plt.colorbar()
 #    plt.pause(0.5)
@@ -364,7 +353,7 @@ def display_means_relationship():
 
     
 
-def display_relationship_vector():
+def disp_vector_dist():
 #
 #  This plots the distance between each pair of digits. 
 #      Interestingly, these distances are all nearly 
@@ -391,10 +380,10 @@ def display_relationship_vector():
         for j in range (i+1,10):
             dist_disp[i,j]=mu_dist[counter]
             counter=counter+1
-
+    plt.title('Vector Distances')
     plt.imshow(dist_disp)
     plt.pause(0.5)
-    return dist_disp
+
     
     
 def display_as_histogram(ax):
@@ -526,7 +515,7 @@ def train(epoch):
 
     torch.save(model.state_dict(),'VAEresults' + str(epoch)+'_VAE' + date_for_filename())
 
-
+#
 #    display_images(ACQUIRED_DATA)
     
 
@@ -590,8 +579,8 @@ if __name__ == "__main__":
 #    if "cosine_sim" not in locals():
 #        cosine_sim=plt.figure()
 #    
-    fig,ax = plt.subplots(3,3)
-    for epoch in range(1, args.epochs + 1):
+   fig,ax = plt.subplots(3,3)
+   for epoch in range(1, args.epochs + 1):
         train(epoch)
 
 #        display_bottleneck(fc2axes)
