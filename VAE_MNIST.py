@@ -37,6 +37,8 @@ torch.manual_seed(args.seed)
 
 device = torch.device("cuda" if args.cuda else "aya")
 
+
+
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 train_loader = torch.utils.data.DataLoader(
     datasets.MNIST('../data', train=True, download=True,
@@ -47,13 +49,23 @@ test_loader = torch.utils.data.DataLoader(
     batch_size=args.batch_size, shuffle=True, **kwargs)
 
 
+def grad_hook(m,get,give):
+    global GradInput
+    GradInput = get
+    global GradOutput
+    GradOutput= give
+      
+
 
 class VAE(nn.Module):
-    def __init__(self,dim=20):  # this sets up 5 linear layers
+    def __init__(self,dim=20,nlayers=4,nhid=2):  # this sets up 5 linear layers
         super(VAE, self).__init__()
-
+        
+        self.nhid = nhid #number of hidden layers
+        self.nlayers = nlayers #number of layers
+        
         self.z_dimension = dim
-
+        self.register_backward_hook(grad_hook)
         self.fc1 = nn.Linear(784, 400) # stacked MNIST to 400
         self.fc21 = nn.Linear(400, self.z_dimension) # two hidden low D
         self.fc22 = nn.Linear(400, self.z_dimension) # layers, same size
@@ -85,7 +97,10 @@ class VAE(nn.Module):
         #   Want to raster scan the decode function via its inputs, rather than 
         #    sampling randomly. 
         #
-
+    def init_hidden(self, bsz):
+        weight = next(self.parameters())
+        return weight.new_zeros(self.nlayers, bsz, self.nhid)    
+    
     def get_samples(self, mu, logvar):
         Tmu = torch.tensor(mu, dtype=torch.float).to(device)
         Tlogvar = torch.tensor(logvar, dtype=torch.float).to(device)
@@ -134,19 +149,21 @@ class VAE(nn.Module):
             mu_all = mu_all/mu_count
             self.mu_test = mu_all
         return 
+        
+
 
 if 'model' not in locals():
     print('new randomly initialized model...\n')
     model = VAE().to(device)
 
 if False: # F9 this to start with a trained model. 
-    model.load_state_dict(torch.load('VAEresults100_VAE20190722_1316')) # KTO favorite
+    model.load_state_dict(torch.load('VAEresults4_VAE20190731_1533')) # KTO favorite
     model.load_state_dict(torch.load('VAE20190716_1551')) # WJP favorite
 
 optimizer = optim.Adam(model.parameters(), lr=1e-5)
 beta = 0.5
 
-
+#corpus = 
 
 #this is a avway to abbreviate some steps
 # Reconstruction + KL divergence losses summed over all elements and batch
@@ -176,6 +193,8 @@ def display_fc2_layer(self, fc2_input_tuple,fc2_output_tensor):
  
     
 fc2_info=model.fc22.register_forward_hook(display_fc2_layer)
+
+#ntokens = len(corpus.dictionary)
 
 def display_images(img, nr=8, nc=16, s1=28, s2=28):
     # img is a tensor containing a stack of images, shaped the 
@@ -291,33 +310,6 @@ def disp_cos_sim():
     
     return num_disp    
     #this is my attempt to show a better ideal of what I am aiming for in this code but not quite there
-    
-    
-def cosine_similiarity():
-#This code compares the cosine similarity between the mean and the std, This is currently the only model
-    #That I was able to use osine similiary to represent but ideally I want to compare the cosine similairity 
-    #between the different number I keep getting error messages so I need to try another approach
-    plt.clf()
-    for batch_idx, (data, which_digit) in enumerate(train_loader):
-        break
-    
-    fc21current,fc22current = model.encode(data.cuda().view(-1,784)) 
-    
-    fc21disp = torch.zeros((10,model.z_dimension)) 
-    
-    for i in range(10):
-        fc21disp[i,:] = \
-        torch.mean(fc21current[which_digit==i,:],0)
-
-    
-    mycos=nn.CosineSimilarity(dim=0)
-    num_disp=torch.zeros(10,10)
-    for i in range (10):
-        for j in range (10):
-            num_disp[i,j] =mycos(nlist[i],nlist[j]) #this code finds the similiarity and return two numbers
-    plt.title('Cosine_Sim')
-    plt.imshow(num_disp.cpu().detach().numpy())
-    
     
 def display_means_relationship():
 #This code displays the means relationship between the means of each handwritten digit. I am attempting 
@@ -481,11 +473,59 @@ def display_transition(n0,n1):
     for i in range(2):
         for j in range(5):
             ax[i,j].imshow(xout[i*5+j,:,:])
-            
-            
-    return
+
+def get_data():
+    for batch_idx, (data, which_digit) in enumerate(test_loader):
+        if batch_idx > 467: #last batch only has 96 examples (#468)
+            break
+    return data.to(device)          
+dataset=get_data()
+ntoken=len(dataset)          
+           
+def repackage_hidden(h):
+    """Wraps hidden states in new Tensors, to detach them from their history."""
+    if isinstance(h, torch.Tensor):
+        return h.detach()
+    else:
+        return tuple(repackage_hidden(v) for v in h)
 
 
+
+def evaluate(epoch):
+    # Turn on evaluation mode which disables dropout.
+    model.eval()
+    total_loss = 0
+    ntokens = len(dataset)
+    hidden = model.init_hidden(epoch)
+    with torch.no_grad():
+        for batch_idx, (data, which_digit) in enumerate(train_loader):
+            if batch_idx > 467: #last bactch only has 96 examples (#468)
+                break
+            data, targets = get_batch(epoch,i)
+            output, hidden = which_digit,hidden
+            output_flat = output.view(-1, ntokens)
+            total_loss += len(data) * loss_function(output_flat, targets).item()
+            hidden = repackage_hidden(hidden)
+    return total_loss / (len(epoch) - 1)
+#
+def plot_grad_flow(named_parameters):
+    #display the average gradient value of all the named parameters
+    plt.clf()
+    ave_grads = []
+    layers = []
+    for n, p in named_parameters:
+        if(p.requires_grad) and ("bias" not in n):
+            layers.append(n)
+            ave_grads.append(p.grad.abs().mean())
+    plt.plot(ave_grads, alpha=0.3, color="b")
+    plt.hlines(0, 0, len(ave_grads)+1, linewidth=1, color="k" )
+    plt.xticks(range(0,len(ave_grads), 1), layers, rotation="vertical")
+    plt.xlim(left=0, right=len(ave_grads))
+    plt.xlabel("Layers")
+    plt.ylabel("average gradient")
+    plt.title("Gradient flow")
+    plt.grid(True)
+    
 
 def train(epoch):
     model.train()
@@ -500,6 +540,7 @@ def train(epoch):
         recon_batch, mu, logvar = model(data)
         loss = loss_function(recon_batch, data, mu, logvar, beta)
         loss.backward()
+        plot_grad_flow(model.named_parameters())
         train_loss += loss.item()
         optimizer.step()
 
