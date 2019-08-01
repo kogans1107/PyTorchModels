@@ -96,10 +96,7 @@ class VAE(nn.Module):
         #  Need something like z = linspace(-sigma,sigma,...), then self.decode(z)
         #   Want to raster scan the decode function via its inputs, rather than 
         #    sampling randomly. 
-        #
-    def init_hidden(self, bsz):
-        weight = next(self.parameters())
-        return weight.new_zeros(self.nlayers, bsz, self.nhid)    
+        #   
     
     def get_samples(self, mu, logvar):
         Tmu = torch.tensor(mu, dtype=torch.float).to(device)
@@ -341,7 +338,7 @@ def display_means_relationship():
     
 #    plt.colorbar()
 #    plt.pause(0.5)
-#    return 
+#    return
 
     
 
@@ -480,14 +477,8 @@ def get_data():
             break
     return data.to(device)          
 dataset=get_data()
-ntoken=len(dataset)          
+          
            
-def repackage_hidden(h):
-    """Wraps hidden states in new Tensors, to detach them from their history."""
-    if isinstance(h, torch.Tensor):
-        return h.detach()
-    else:
-        return tuple(repackage_hidden(v) for v in h)
 
 
 
@@ -495,18 +486,15 @@ def evaluate(epoch):
     # Turn on evaluation mode which disables dropout.
     model.eval()
     total_loss = 0
-    ntokens = len(dataset)
-    hidden = model.init_hidden(epoch)
     with torch.no_grad():
-        for batch_idx, (data, which_digit) in enumerate(train_loader):
+        for batch_idx, (data, targets) in enumerate(train_loader):
             if batch_idx > 467: #last bactch only has 96 examples (#468)
                 break
-            data, targets = get_batch(epoch,i)
-            output, hidden = which_digit,hidden
-            output_flat = output.view(-1, ntokens)
-            total_loss += len(data) * loss_function(output_flat, targets).item()
-            hidden = repackage_hidden(hidden)
-    return total_loss / (len(epoch) - 1)
+            data=data.to(device)
+            recon_batch, mu, logvar = model(data)
+#            loss_data=loss_function(recon_batch,data,mu,logvar,data).item()
+            total_loss += len(dataset) * loss_function(recon_batch,data,mu,logvar,beta).item()
+    return total_loss / (len(data) - 1)
 #
 def plot_grad_flow(named_parameters):
     #display the average gradient value of all the named parameters
