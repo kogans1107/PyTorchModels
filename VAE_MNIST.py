@@ -471,12 +471,12 @@ def display_transition(n0,n1):
         for j in range(5):
             ax[i,j].imshow(xout[i*5+j,:,:])
 
-def get_data():
-    for batch_idx, (data, which_digit) in enumerate(test_loader):
-        if batch_idx > 467: #last batch only has 96 examples (#468)
-            break
-    return data.to(device)          
-#dataset=get_data()
+#def get_data():
+#    for batch_idx, (data, which_digit) in enumerate(test_loader):
+#        if batch_idx > 467: #last batch only has 96 examples (#468)
+#            break
+#    return data.to(device)          
+##dataset=get_data()
 
 def BackHook(self,GradInput,GradOutput):
     #takes to absolute max and min of the gradient
@@ -490,11 +490,8 @@ def BackHook(self,GradInput,GradOutput):
 def LoadData(epoch):
     #get the absolute max and min of the gradient 
     #on all of the models layers then return the max and min of the data
-    fc1_data=model.fc1.register_backward_hook(BackHook)
-    fc21_data=model.fc21.register_backward_hook(BackHook)
-    fc22_data=model.fc22.register_backward_hook(BackHook)
-    fc3_data=model.fc3.register_backward_hook(BackHook)
-    fc4_data=model.fc4.register_backward_hook(BackHook)
+    backward_hook=model.fc1.register_backward_hook(BackHook)
+    
     MaxData=[torch.zeros(1)]
     MinData=[torch.ones(1)]
 #    for batch_idx, (data,_) in enumerate(train_loader):
@@ -510,17 +507,13 @@ def LoadData(epoch):
         MinData.clear()
         MinData.append(Min)
         
-    fc1_data.remove()
-    fc21_data.remove()
-    fc22_data.remove()
-    fc3_data.remove()
-    fc4_data.remove()
+    backward_hook.remove()
     
     print(MaxData,MinData)
     return MaxData,MinData           
 
 
-<<<<<<< HEAD
+
 
 #def evaluate(epoch):
 #    # Turn on evaluation mode which disables dropout.
@@ -534,20 +527,8 @@ def LoadData(epoch):
 #            recon_batch, mu, logvar = model(data)
 #            total_loss += len(dataset) * loss_function(recon_batch,data,mu,logvar,beta).item()
 #    return total_loss / (len(data) - 1)
-=======
-def evaluate(epoch):
-    # Turn on evaluation mode which disables dropout.
-    model.eval()
-    total_loss = 0
-    with torch.no_grad():
-        for batch_idx, (data, targets) in enumerate(train_loader):
-            if batch_idx > 467: #last bactch only has 96 examples (#468)
-                break
-            data=data.to(device)
-            recon_batch, mu, logvar = model(data)
-            total_loss += len(dataset) * loss_function(recon_batch,data,mu,logvar,beta).item()
-    return total_loss / (len(data) - 1)
->>>>>>> a20ecd0dfe81fef41fe3e5985a0edb1ce8826f1f
+
+
 #
 #def plot_grad_flow(named_parameters):
 #    #display the average gradient value of all the named parameters
