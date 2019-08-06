@@ -49,12 +49,12 @@ test_loader = torch.utils.data.DataLoader(
     batch_size=args.batch_size, shuffle=True, **kwargs)
 
 
-def grad_hook(m,get,give):
-    global GradInput
-    GradInput = get
-    global GradOutput
-    GradOutput= give
-      
+#def grad_hook(m,get,give):
+#    global GradInput
+#    GradInput = get
+#    global GradOutput
+#    GradOutput= give
+#      
 
 
 class VAE(nn.Module):
@@ -481,60 +481,64 @@ def get_data():
 dataset=get_data()
 
 def BackHook(self,GradInput,GradOutput):
-    run=model(dataset)
     global Max
-    Max=[]
+    Max=torch.max(GradOutput[0])
     global Min
-    Min=[]
-    Max.append(torch.max(run[0]))
-    Min.append(torch.min(run[0]))
+    Min=torch.min(GradOutput[0])
+
+backwards=model.fc1.register_backward_hook(BackHook) 
           
 def LoadData(epoch):
     backwards=model.fc1.register_backward_hook(BackHook)
     MaxData=[0]
     MinData=[0]
     for batch_idx, (data,_) in enumerate(train_loader):
-        if MaxData[0] < torch.max(data):
+        data=data.to(device)
+        optimizer.zero_grad()
+        recon_batch, mu, logvar = model(data)
+        loss = loss_function(recon_batch, data, mu, logvar, beta)
+        loss.backward()
+        if MaxData[0] < Max:
             MaxData.clear()
-            MaxData.append(torch.max(data))
-        if MinData[0] > torch.min(data):
+            MaxData.append(Max)
+        if MinData[0] > Min:
             MinData.clear()
-            MinData.append(torch.min(data))
+            MinData.append(Min)
     backwards.remove()
     return MaxData,MinData           
 
 
 
-def evaluate(epoch):
-    # Turn on evaluation mode which disables dropout.
-    model.eval()
-    total_loss = 0
-    with torch.no_grad():
-        for batch_idx, (data, targets) in enumerate(train_loader):
-            if batch_idx > 467: #last bactch only has 96 examples (#468)
-                break
-            data=data.to(device)
-            recon_batch, mu, logvar = model(data)
-            total_loss += len(dataset) * loss_function(recon_batch,data,mu,logvar,beta).item()
-    return total_loss / (len(data) - 1)
+#def evaluate(epoch):
+#    # Turn on evaluation mode which disables dropout.
+#    model.eval()
+#    total_loss = 0
+#    with torch.no_grad():
+#        for batch_idx, (data, targets) in enumerate(train_loader):
+#            if batch_idx > 467: #last bactch only has 96 examples (#468)
+#                break
+#            data=data.to(device)
+#            recon_batch, mu, logvar = model(data)
+#            total_loss += len(dataset) * loss_function(recon_batch,data,mu,logvar,beta).item()
+#    return total_loss / (len(data) - 1)
 #
-def plot_grad_flow(named_parameters):
-    #display the average gradient value of all the named parameters
-    plt.clf()
-    ave_grads = []
-    layers = []
-    for n, p in named_parameters:
-        if(p.requires_grad) and ("bias" not in n):
-            layers.append(n)
-            ave_grads.append(p.grad.abs().mean())
-    plt.plot(ave_grads, alpha=0.3, color="b")
-    plt.hlines(0, 0, len(ave_grads)+1, linewidth=1, color="k" )
-    plt.xticks(range(0,len(ave_grads), 1), layers, rotation="vertical")
-    plt.xlim(left=0, right=len(ave_grads))
-    plt.xlabel("Layers")
-    plt.ylabel("average gradient")
-    plt.title("Gradient flow")
-    plt.grid(True)
+#def plot_grad_flow(named_parameters):
+#    #display the average gradient value of all the named parameters
+#    plt.clf()
+#    ave_grads = []
+#    layers = []
+#    for n, p in named_parameters:
+#        if(p.requires_grad) and ("bias" not in n):
+#            layers.append(n)
+#            ave_grads.append(p.grad.abs().mean())
+#    plt.plot(ave_grads, alpha=0.3, color="b")
+#    plt.hlines(0, 0, len(ave_grads)+1, linewidth=1, color="k" )
+#    plt.xticks(range(0,len(ave_grads), 1), layers, rotation="vertical")
+#    plt.xlim(left=0, right=len(ave_grads))
+#    plt.xlabel("Layers")
+#    plt.ylabel("average gradient")
+#    plt.title("Gradient flow")
+#    plt.grid(True)
     
 
 def train(epoch):
@@ -565,8 +569,9 @@ def train(epoch):
 
 
     torch.save(model.state_dict(),'VAEresults' + str(epoch)+'_VAE' + date_for_filename())
+    
+    LoadData(epoch)
 
-#
 #    display_images(ACQUIRED_DATA)
     
 
