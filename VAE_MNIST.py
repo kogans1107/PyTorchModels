@@ -65,7 +65,7 @@ class VAE(nn.Module):
         self.nlayers = nlayers #number of layers
         
         self.z_dimension = dim
-        self.register_backward_hook(grad_hook)
+#        self.register_backward_hook(grad_hook)
         self.fc1 = nn.Linear(784, 400) # stacked MNIST to 400
         self.fc21 = nn.Linear(400, self.z_dimension) # two hidden low D
         self.fc22 = nn.Linear(400, self.z_dimension) # layers, same size
@@ -182,14 +182,14 @@ def acquire_data_hook(self, input_tuple, output_tensor):    # Now THIS is a hook
    global ACQUIRED_DATA
    ACQUIRED_DATA=output_tensor
 
-acq_hook_handle = model.fc4.register_forward_hook(acquire_data_hook)
+#acq_hook_handle = model.fc4.register_forward_hook(acquire_data_hook)
 
 def display_fc2_layer(self, fc2_input_tuple,fc2_output_tensor):
     global Shape
     Shape=fc2_output_tensor
  
-    
-fc2_info=model.fc22.register_forward_hook(display_fc2_layer)
+#    
+#fc2_info=model.fc22.register_forward_hook(display_fc2_layer)
 
 #ntokens = len(corpus.dictionary)
 
@@ -478,6 +478,30 @@ def get_data():
     return data.to(device)          
 #dataset=get_data()
 
+def BackHook(self,GradInput,GradOutput):
+    run=model(dataset)
+    global Max
+    Max=[]
+    global Min
+    Min=[]
+    Max.append(torch.max(run[0]))
+    Min.append(torch.min(run[0]))
+          
+def LoadData(epoch):
+    backwards=model.fc1.register_backward_hook(BackHook)
+    MaxData=[0]
+    MinData=[0]
+    for batch_idx, (data,_) in enumerate(train_loader):
+        if MaxData[0] < torch.max(data):
+            MaxData.clear()
+            MaxData.append(torch.max(data))
+        if MinData[0] > torch.min(data):
+            MinData.clear()
+            MinData.append(torch.min(data))
+    backwards.remove()
+    return MaxData,MinData           
+
+
 def evaluate(epoch):
     # Turn on evaluation mode which disables dropout.
     model.eval()
@@ -488,7 +512,6 @@ def evaluate(epoch):
                 break
             data=data.to(device)
             recon_batch, mu, logvar = model(data)
-#            loss_data=loss_function(recon_batch,data,mu,logvar,data).item()
             total_loss += len(dataset) * loss_function(recon_batch,data,mu,logvar,beta).item()
     return total_loss / (len(data) - 1)
 #
@@ -524,7 +547,7 @@ def train(epoch):
         recon_batch, mu, logvar = model(data)
         loss = loss_function(recon_batch, data, mu, logvar, beta)
         loss.backward()
-        plot_grad_flow(model.named_parameters())
+#        plot_grad_flow(model.named_parameters())
         train_loss += loss.item()
         optimizer.step()
 
