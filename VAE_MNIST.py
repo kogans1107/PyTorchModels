@@ -22,8 +22,8 @@ import time
 parser = argparse.ArgumentParser(description='VAE MNIST Example')
 parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                     help='input batch size for training (default: 128)')
-parser.add_argument('--epochs', type=int, default=10, metavar='N',
-                    help='number of epochs to train (default: 10)')
+parser.add_argument('--epochs', type=int, default=1, metavar='N',
+                    help='number of epochs to train (default: 1)')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='enables CUDA training')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
@@ -162,7 +162,7 @@ beta = 0.5
 
 #corpus = 
 
-#this is a avway to abbreviate some steps
+#this is a a way to abbreviate some steps
 # Reconstruction + KL divergence losses summed over all elements and batch
 def loss_function(recon_x, x, mu, logvar, beta):
     
@@ -475,10 +475,8 @@ def get_data():
     for batch_idx, (data, which_digit) in enumerate(test_loader):
         if batch_idx > 467: #last batch only has 96 examples (#468)
             break
-    return data.to(device)    
-
-      
-dataset=get_data()
+    return data.to(device)          
+#dataset=get_data()
 
 def BackHook(self,GradInput,GradOutput):
     #takes to absolute max and min of the gradient
@@ -522,6 +520,7 @@ def LoadData(epoch):
     return MaxData,MinData           
 
 
+<<<<<<< HEAD
 
 #def evaluate(epoch):
 #    # Turn on evaluation mode which disables dropout.
@@ -535,6 +534,20 @@ def LoadData(epoch):
 #            recon_batch, mu, logvar = model(data)
 #            total_loss += len(dataset) * loss_function(recon_batch,data,mu,logvar,beta).item()
 #    return total_loss / (len(data) - 1)
+=======
+def evaluate(epoch):
+    # Turn on evaluation mode which disables dropout.
+    model.eval()
+    total_loss = 0
+    with torch.no_grad():
+        for batch_idx, (data, targets) in enumerate(train_loader):
+            if batch_idx > 467: #last bactch only has 96 examples (#468)
+                break
+            data=data.to(device)
+            recon_batch, mu, logvar = model(data)
+            total_loss += len(dataset) * loss_function(recon_batch,data,mu,logvar,beta).item()
+    return total_loss / (len(data) - 1)
+>>>>>>> a20ecd0dfe81fef41fe3e5985a0edb1ce8826f1f
 #
 #def plot_grad_flow(named_parameters):
 #    #display the average gradient value of all the named parameters
