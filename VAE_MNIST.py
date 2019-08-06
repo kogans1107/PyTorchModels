@@ -481,30 +481,44 @@ def get_data():
 dataset=get_data()
 
 def BackHook(self,GradInput,GradOutput):
+    #takes to absolute max and min of the gradient
     global Max
-    Max=torch.max(GradOutput[0])
+    Max=torch.abs_(torch.max(GradOutput[0]))
     global Min
-    Min=torch.min(GradOutput[0])
+    Min=torch.abs_(torch.min(GradOutput[0]))
 
-backwards=model.fc1.register_backward_hook(BackHook) 
+#backwards=model.fc1.register_backward_hook(BackHook) 
           
 def LoadData(epoch):
-    backwards=model.fc1.register_backward_hook(BackHook)
-    MaxData=[0]
-    MinData=[0]
-    for batch_idx, (data,_) in enumerate(train_loader):
-        data=data.to(device)
-        optimizer.zero_grad()
-        recon_batch, mu, logvar = model(data)
-        loss = loss_function(recon_batch, data, mu, logvar, beta)
-        loss.backward()
-        if MaxData[0] < Max:
-            MaxData.clear()
-            MaxData.append(Max)
-        if MinData[0] > Min:
-            MinData.clear()
-            MinData.append(Min)
-    backwards.remove()
+    #get the absolute max and min of the gradient 
+    #on all of the models layers then return the max and min of the data
+    fc1_data=model.fc1.register_backward_hook(BackHook)
+    fc21_data=model.fc21.register_backward_hook(BackHook)
+    fc22_data=model.fc22.register_backward_hook(BackHook)
+    fc3_data=model.fc3.register_backward_hook(BackHook)
+    fc4_data=model.fc4.register_backward_hook(BackHook)
+    MaxData=[torch.zeros(1)]
+    MinData=[torch.ones(1)]
+#    for batch_idx, (data,_) in enumerate(train_loader):
+#        data=data.to(device)
+#        optimizer.zero_grad()
+#        recon_batch, mu, logvar = model(data)
+#        loss = loss_function(recon_batch, data, mu, logvar, beta)
+#        loss.backward()
+    if abs(MaxData[0].to(device)) < abs(Max.to(device)):
+        MaxData.clear()
+        MaxData.append(Max)
+    if abs(MinData[0].to(device)) < abs(Min.to(device)):
+        MinData.clear()
+        MinData.append(Min)
+        
+    fc1_data.remove()
+    fc21_data.remove()
+    fc22_data.remove()
+    fc3_data.remove()
+    fc4_data.remove()
+    
+    print(MaxData,MinData)
     return MaxData,MinData           
 
 
