@@ -162,7 +162,7 @@ beta = 0.5
 
 #corpus = 
 
-#this is a avway to abbreviate some steps
+#this is a a way to abbreviate some steps
 # Reconstruction + KL divergence losses summed over all elements and batch
 def loss_function(recon_x, x, mu, logvar, beta):
     
@@ -477,10 +477,6 @@ def get_data():
             break
     return data.to(device)          
 #dataset=get_data()
-          
-           
-
-
 
 def evaluate(epoch):
     # Turn on evaluation mode which disables dropout.
