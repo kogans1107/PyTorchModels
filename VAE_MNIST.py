@@ -482,21 +482,22 @@ def display_transition(n0,n1):
 #Min=[torch.Tensor([1e15])]
 
 global Max
+Max=[torch.Tensor([1e-15])]
 
 global Min
+Min=[torch.Tensor([1e15])]
 
 def BackHook(self,GradInput,GradOutput):
 #    takes to absolute max and min of the gradient
     global Max
-    Max=[torch.Tensor([1e-15])]
     global Min
-    Min=[torch.Tensor([1e15])]
     
 
     Current_Grad_Max=torch.abs_(torch.max(GradInput[0]))
     Current_Grad_Min=torch.abs_(torch.min(GradInput[0]))
     
     if torch.abs_(Max[0].to(device)) < Current_Grad_Max.to(device):
+        print(Max[0].to(device),Current_Grad_Max.to(device))
         Max.clear()
         Max.append(Current_Grad_Max.to(device))
     
@@ -543,20 +544,33 @@ max_grads = []
 def plot_grad_flow(named_parameters):
     #display the average gradient values of all of the named parameters
     ave_grads = []
+<<<<<<< HEAD
     global min_grads
     min_grads = []
     global max_grads
     max_grads = []
+=======
+    max_grads = []
+    min_grads = []
+>>>>>>> ddda6e8f0b736efbb5f3177ce48c473640e94fbb
     layers = []
     for n, p in named_parameters:
         if(p.requires_grad) and ("bias" not in n):
-            layers.append(n)
+            layer_name = [nl for nl in n.split('.')][0]
+            layers.append(layer_name)
             ave_grads.append(p.grad.abs().mean())
             max_grads.append(p.grad.abs().max())
             min_grads.append(p.grad.abs().min())
+<<<<<<< HEAD
     plt.plot(ave_grads, alpha=0.3, color="r")
     plt.plot(max_grads, alpha=0.3, color="g")
     plt.plot(min_grads, alpha=0.3, color="b")
+=======
+    plt.plot(ave_grads, alpha=0.3, color="b")
+    plt.plot(max_grads, alpha=0.3, color="r")
+    plt.plot(min_grads, alpha=0.3, color="g")
+    
+>>>>>>> ddda6e8f0b736efbb5f3177ce48c473640e94fbb
     plt.hlines(0, 0, len(ave_grads)+1, linewidth=1, color="k" )
     plt.xticks(range(0,len(ave_grads), 1), layers, rotation="vertical")
     plt.xlim(left=0, right=len(ave_grads))
@@ -581,12 +595,18 @@ def train(epoch):
         recon_batch, mu, logvar = model(data)
         loss = loss_function(recon_batch, data, mu, logvar, beta)
         loss.backward()
+
         plot_grad_flow(model.named_parameters())
         train_loss += loss.item()
         optimizer.step()
 #    backwards.remove()
+<<<<<<< HEAD
     print('Max', [ g.item() for g in max_grads])
     print('Min', [ g.item() for g in min_grads], '\n')
+=======
+    print('Max',Max[0])
+    print('Min',Min[0], '\n')
+>>>>>>> ddda6e8f0b736efbb5f3177ce48c473640e94fbb
 
 #        if batch_idx % args.log_interval == 0:
 #            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
