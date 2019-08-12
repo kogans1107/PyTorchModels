@@ -482,21 +482,22 @@ def display_transition(n0,n1):
 #Min=[torch.Tensor([1e15])]
 
 global Max
+Max=[torch.Tensor([1e-15])]
 
 global Min
+Min=[torch.Tensor([1e15])]
 
 def BackHook(self,GradInput,GradOutput):
 #    takes to absolute max and min of the gradient
     global Max
-    Max=[torch.Tensor([1e-15])]
     global Min
-    Min=[torch.Tensor([1e15])]
     
 
     Current_Grad_Max=torch.abs_(torch.max(GradInput[0]))
     Current_Grad_Min=torch.abs_(torch.min(GradInput[0]))
     
     if torch.abs_(Max[0].to(device)) < Current_Grad_Max.to(device):
+        print(Max[0].to(device),Current_Grad_Max.to(device))
         Max.clear()
         Max.append(Current_Grad_Max.to(device))
     
@@ -561,7 +562,6 @@ def plot_grad_flow(named_parameters):
     for n, p in named_parameters:
         if(p.requires_grad) and ("bias" not in n):
             layer_name = [nl for nl in n.split('.')][0]
-            print(layer_name)
             layers.append(layer_name)
             ave_grads.append(p.grad.abs().mean())
             max_grads.append(p.grad.abs().max())
@@ -582,7 +582,7 @@ def plot_grad_flow(named_parameters):
 def train(epoch):
     model.train()
     train_loss = 0
-    backwards=model.fc4.register_backward_hook(BackHook) 
+#    backwards=model.fc4.register_backward_hook(BackHook) 
     for batch_idx, (data, _) in enumerate(train_loader):
         if batch_idx > 467: #last bactch only has 96 examples (#468)
             break
@@ -593,10 +593,11 @@ def train(epoch):
         recon_batch, mu, logvar = model(data)
         loss = loss_function(recon_batch, data, mu, logvar, beta)
         loss.backward()
+
         plot_grad_flow(model.named_parameters())
         train_loss += loss.item()
         optimizer.step()
-    backwards.remove()
+#    backwards.remove()
     print('Max',Max[0])
     print('Min',Min[0], '\n')
 
