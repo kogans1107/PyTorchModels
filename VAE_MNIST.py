@@ -5,7 +5,7 @@ Created on Tue Jul  2 11:19:05 2019
 
 @author: karrington
 """
-
+from __future__ import print_function
 import matplotlib.pyplot as plt
 import argparse
 import itertools
@@ -58,11 +58,10 @@ test_loader = torch.utils.data.DataLoader(
 
 
 class VAE(nn.Module):
-    def __init__(self,dim=20,nlayers=4,nhid=2):  # this sets up 5 linear layers
+    def __init__(self,dim=20):  # this sets up 5 linear layers
         super(VAE, self).__init__()
         
-        self.nhid = nhid #number of hidden layers
-        self.nlayers = nlayers #number of layers
+
         
         self.z_dimension = dim
 #        self.register_backward_hook(grad_hook)
@@ -154,10 +153,10 @@ if 'model' not in locals():
     model = VAE().to(device)
 
 if False: # F9 this to start with a trained model. 
-    model.load_state_dict(torch.load('VAEresults4_VAE20190731_1533')) # KTO favorite
+    model.load_state_dict(torch.load('VAEresults1_VAE20190808_1155')) # KTO favorite
     model.load_state_dict(torch.load('VAE20190716_1551')) # WJP favorite
 
-optimizer = optim.Adam(model.parameters(), lr=1e-5)
+optimizer = optim.Adam(model.parameters(), lr=1e-6)
 beta = 0.5
 
 #corpus = 
@@ -477,40 +476,62 @@ def display_transition(n0,n1):
 #            break
 #    return data.to(device)          
 ##dataset=get_data()
+#
+#Max=[torch.Tensor([1e-15])]
+#
+#Min=[torch.Tensor([1e15])]
+
+global Max
+
+global Min
 
 def BackHook(self,GradInput,GradOutput):
-    #takes to absolute max and min of the gradient
+#    takes to absolute max and min of the gradient
     global Max
-    Max=torch.abs_(torch.max(GradOutput[0]))
+    Max=[torch.Tensor([1e-15])]
     global Min
-    Min=torch.abs_(torch.min(GradOutput[0]))
+    Min=[torch.Tensor([1e15])]
+    
 
-#backwards=model.fc1.register_backward_hook(BackHook) 
-          
-def LoadData(epoch):
-    #get the absolute max and min of the gradient 
-    #on all of the models layers then return the max and min of the data
-    backward_hook=model.fc1.register_backward_hook(BackHook)
+    Current_Grad_Max=torch.abs_(torch.max(GradInput[0]))
+    Current_Grad_Min=torch.abs_(torch.min(GradInput[0]))
     
-    MaxData=[torch.zeros(1)]
-    MinData=[torch.ones(1)]
-#    for batch_idx, (data,_) in enumerate(train_loader):
-#        data=data.to(device)
-#        optimizer.zero_grad()
-#        recon_batch, mu, logvar = model(data)
-#        loss = loss_function(recon_batch, data, mu, logvar, beta)
-#        loss.backward()
-    if abs(MaxData[0].to(device)) < abs(Max.to(device)):
-        MaxData.clear()
-        MaxData.append(Max)
-    if abs(MinData[0].to(device)) < abs(Min.to(device)):
-        MinData.clear()
-        MinData.append(Min)
+    if torch.abs_(Max[0].to(device)) < Current_Grad_Max.to(device):
+        Max.clear()
+        Max.append(Current_Grad_Max.to(device))
+    
+    if torch.abs_(Min[0].to(device)) > Current_Grad_Min.to(device):
+        Min.clear()
+        Min.append(Current_Grad_Min.to(device))
         
-    backward_hook.remove()
-    
-    print(MaxData,MinData)
-    return MaxData,MinData           
+
+
+
+          
+#def LoadData(epoch):
+#    #get the absolute max and min of the gradient 
+#    #on all of the models layers then return the max and min of the data
+#    backward_hook=model.fc1.register_backward_hook(BackHook)
+#    
+#    MaxData=[torch.zeros(1)]
+#    MinData=[torch.ones(1)]
+##    for batch_idx, (data,_) in enumerate(train_loader):
+##        data=data.to(device)
+##        optimizer.zero_grad()
+##        recon_batch, mu, logvar = model(data)
+##        loss = loss_function(recon_batch, data, mu, logvar, beta)
+##        loss.backward()
+#    if abs(MaxData[0].to(device)) < abs(Max.to(device)):
+#        MaxData.clear()
+#        MaxData.append(Max)
+#    if abs(MinData[0].to(device)) < abs(Min.to(device)):
+#        MinData.clear()
+#        MinData.append(Min)
+#        
+#    backward_hook.remove()
+#    
+#    print(MaxData,MinData)
+#    return MaxData,MinData           
 
 
 
@@ -530,28 +551,29 @@ def LoadData(epoch):
 
 
 #
-#def plot_grad_flow(named_parameters):
-#    #display the average gradient value of all the named parameters
-#    plt.clf()
-#    ave_grads = []
-#    layers = []
-#    for n, p in named_parameters:
-#        if(p.requires_grad) and ("bias" not in n):
-#            layers.append(n)
-#            ave_grads.append(p.grad.abs().mean())
-#    plt.plot(ave_grads, alpha=0.3, color="b")
-#    plt.hlines(0, 0, len(ave_grads)+1, linewidth=1, color="k" )
-#    plt.xticks(range(0,len(ave_grads), 1), layers, rotation="vertical")
-#    plt.xlim(left=0, right=len(ave_grads))
-#    plt.xlabel("Layers")
-#    plt.ylabel("average gradient")
-#    plt.title("Gradient flow")
-#    plt.grid(True)
+def plot_grad_flow(named_parameters):
+    #display the average gradient values of all of the named parameters
+    plt.clf()
+    ave_grads = []
+    layers = []
+    for n, p in named_parameters:
+        if(p.requires_grad) and ("bias" not in n):
+            layers.append(n)
+            ave_grads.append(p.grad.abs().mean())
+    plt.plot(ave_grads, alpha=0.3, color="b")
+    plt.hlines(0, 0, len(ave_grads)+1, linewidth=1, color="k" )
+    plt.xticks(range(0,len(ave_grads), 1), layers, rotation="vertical")
+    plt.xlim(left=0, right=len(ave_grads))
+    plt.xlabel("Layers")
+    plt.ylabel("average gradient")
+    plt.title("Gradient flow")
+    plt.grid(True)
     
 
 def train(epoch):
     model.train()
     train_loss = 0
+    backwards=model.fc4.register_backward_hook(BackHook) 
     for batch_idx, (data, _) in enumerate(train_loader):
         if batch_idx > 467: #last bactch only has 96 examples (#468)
             break
@@ -562,9 +584,12 @@ def train(epoch):
         recon_batch, mu, logvar = model(data)
         loss = loss_function(recon_batch, data, mu, logvar, beta)
         loss.backward()
-#        plot_grad_flow(model.named_parameters())
+        plot_grad_flow(model.named_parameters())
         train_loss += loss.item()
         optimizer.step()
+    backwards.remove()
+    print('Max',Max[0])
+    print('Min',Min[0], '\n')
 
 #        if batch_idx % args.log_interval == 0:
 #            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
@@ -578,7 +603,7 @@ def train(epoch):
 
     torch.save(model.state_dict(),'VAEresults' + str(epoch)+'_VAE' + date_for_filename())
     
-    LoadData(epoch)
+#    LoadData(epoch)
 
 #    display_images(ACQUIRED_DATA)
     
@@ -643,7 +668,7 @@ if __name__ == "__main__":
 #    if "cosine_sim" not in locals():
 #        cosine_sim=plt.figure()
 #    
-   fig,ax = plt.subplots(3,3)
+#   fig,ax = plt.subplots(3,3)
    for epoch in range(1, args.epochs + 1):
         train(epoch)
 
@@ -674,13 +699,13 @@ if __name__ == "__main__":
         test(epoch)
         model.average_all_mu(test=True)
         
-        for i in range(3):
-            for j in range(3):
-                this_digit = i*3+j+1
-                img=model.decode(model.mu_test[this_digit,:].to(device)).cpu().detach().numpy().reshape((28,28))
-                ax[i,j].imshow(img)
-                ax[i,j].set_title(str(this_digit))
-        plt.pause(0.5)
+#        for i in range(3):
+#            for j in range(3):
+#                this_digit = i*3+j+1
+#                img=model.decode(model.mu_test[this_digit,:].to(device)).cpu().detach().numpy().reshape((28,28))
+#                ax[i,j].imshow(img)
+#                ax[i,j].set_title(str(this_digit))
+#        plt.pause(0.5)
 #        with torch.no_grad():
 #            sample = torch.randn(64, 20).to(device)
 #            sample = model.decode(sample).cpu()
