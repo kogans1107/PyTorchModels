@@ -555,12 +555,21 @@ def plot_grad_flow(named_parameters):
     #display the average gradient values of all of the named parameters
     plt.clf()
     ave_grads = []
+    max_grads = []
+    min_grads = []
     layers = []
     for n, p in named_parameters:
         if(p.requires_grad) and ("bias" not in n):
-            layers.append(n)
+            layer_name = [nl for nl in n.split('.')][0]
+            print(layer_name)
+            layers.append(layer_name)
             ave_grads.append(p.grad.abs().mean())
+            max_grads.append(p.grad.abs().max())
+            min_grads.append(p.grad.abs().min())
     plt.plot(ave_grads, alpha=0.3, color="b")
+    plt.plot(max_grads, alpha=0.3, color="r")
+    plt.plot(min_grads, alpha=0.3, color="g")
+    
     plt.hlines(0, 0, len(ave_grads)+1, linewidth=1, color="k" )
     plt.xticks(range(0,len(ave_grads), 1), layers, rotation="vertical")
     plt.xlim(left=0, right=len(ave_grads))
