@@ -535,32 +535,28 @@ def BackHook(self,GradInput,GradOutput):
 
 
 
-
-#def evaluate(epoch):
-#    # Turn on evaluation mode which disables dropout.
-#    model.eval()
-#    total_loss = 0
-#    with torch.no_grad():
-#        for batch_idx, (data, targets) in enumerate(train_loader):
-#            if batch_idx > 467: #last bactch only has 96 examples (#468)
-#                break
-#            data=data.to(device)
-#            recon_batch, mu, logvar = model(data)
-#            total_loss += len(dataset) * loss_function(recon_batch,data,mu,logvar,beta).item()
-#    return total_loss / (len(data) - 1)
+min_grads = []
+max_grads = []
 
 
 #
 def plot_grad_flow(named_parameters):
     #display the average gradient values of all of the named parameters
-    plt.clf()
     ave_grads = []
+    global min_grads
+    min_grads = []
+    global max_grads
+    max_grads = []
     layers = []
     for n, p in named_parameters:
         if(p.requires_grad) and ("bias" not in n):
             layers.append(n)
             ave_grads.append(p.grad.abs().mean())
-    plt.plot(ave_grads, alpha=0.3, color="b")
+            max_grads.append(p.grad.abs().max())
+            min_grads.append(p.grad.abs().min())
+    plt.plot(ave_grads, alpha=0.3, color="r")
+    plt.plot(max_grads, alpha=0.3, color="g")
+    plt.plot(min_grads, alpha=0.3, color="b")
     plt.hlines(0, 0, len(ave_grads)+1, linewidth=1, color="k" )
     plt.xticks(range(0,len(ave_grads), 1), layers, rotation="vertical")
     plt.xlim(left=0, right=len(ave_grads))
@@ -569,11 +565,12 @@ def plot_grad_flow(named_parameters):
     plt.title("Gradient flow")
     plt.grid(True)
     
+    
 
 def train(epoch):
     model.train()
     train_loss = 0
-    backwards=model.fc4.register_backward_hook(BackHook) 
+#    backwards=model.fc4.register_backward_hook(BackHook) 
     for batch_idx, (data, _) in enumerate(train_loader):
         if batch_idx > 467: #last bactch only has 96 examples (#468)
             break
@@ -587,9 +584,9 @@ def train(epoch):
         plot_grad_flow(model.named_parameters())
         train_loss += loss.item()
         optimizer.step()
-    backwards.remove()
-    print('Max',Max[0])
-    print('Min',Min[0], '\n')
+#    backwards.remove()
+    print('Max', [ g.item() for g in max_grads])
+    print('Min', [ g.item() for g in min_grads], '\n')
 
 #        if batch_idx % args.log_interval == 0:
 #            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
