@@ -538,21 +538,20 @@ def BackHook(self,GradInput,GradOutput):
 
 min_grads = []
 max_grads = []
-
+ave_grads = []
 
 #
 def plot_grad_flow(named_parameters):
     #display the average gradient values of all of the named parameters
+    global ave_grads
     ave_grads = []
-<<<<<<< HEAD
+
     global min_grads
     min_grads = []
     global max_grads
     max_grads = []
-=======
-    max_grads = []
-    min_grads = []
->>>>>>> ddda6e8f0b736efbb5f3177ce48c473640e94fbb
+    
+
     layers = []
     for n, p in named_parameters:
         if(p.requires_grad) and ("bias" not in n):
@@ -561,16 +560,11 @@ def plot_grad_flow(named_parameters):
             ave_grads.append(p.grad.abs().mean())
             max_grads.append(p.grad.abs().max())
             min_grads.append(p.grad.abs().min())
-<<<<<<< HEAD
-    plt.plot(ave_grads, alpha=0.3, color="r")
-    plt.plot(max_grads, alpha=0.3, color="g")
-    plt.plot(min_grads, alpha=0.3, color="b")
-=======
-    plt.plot(ave_grads, alpha=0.3, color="b")
+
+    plt.plot(ave_grads, alpha=0.3, color="g")
     plt.plot(max_grads, alpha=0.3, color="r")
-    plt.plot(min_grads, alpha=0.3, color="g")
-    
->>>>>>> ddda6e8f0b736efbb5f3177ce48c473640e94fbb
+    plt.plot(min_grads, alpha=0.3, color="b")
+
     plt.hlines(0, 0, len(ave_grads)+1, linewidth=1, color="k" )
     plt.xticks(range(0,len(ave_grads), 1), layers, rotation="vertical")
     plt.xlim(left=0, right=len(ave_grads))
@@ -578,8 +572,12 @@ def plot_grad_flow(named_parameters):
     plt.ylabel("average gradient")
     plt.title("Gradient flow")
     plt.grid(True)
-    
-    
+
+
+
+
+
+
 
 def train(epoch):
     model.train()
@@ -595,18 +593,22 @@ def train(epoch):
         recon_batch, mu, logvar = model(data)
         loss = loss_function(recon_batch, data, mu, logvar, beta)
         loss.backward()
-
         plot_grad_flow(model.named_parameters())
         train_loss += loss.item()
         optimizer.step()
 #    backwards.remove()
-<<<<<<< HEAD
-    print('Max', [ g.item() for g in max_grads])
-    print('Min', [ g.item() for g in min_grads], '\n')
-=======
-    print('Max',Max[0])
-    print('Min',Min[0], '\n')
->>>>>>> ddda6e8f0b736efbb5f3177ce48c473640e94fbb
+        plt.plot(max_grads)
+        plt.pause(0.5)
+        plt.plot(min_grads)
+        plt.pause(0.5)
+        Grad_Max=[ g.item() for g in max_grads]
+        Grad_Ave=[ g.item() for g in ave_grads]
+        Grad_Min=[ g.item() for g in min_grads]
+
+
+    print('Max', Grad_Max, '\n', 'Avg', Grad_Ave,'\n', 'Min', Grad_Min)
+
+
 
 #        if batch_idx % args.log_interval == 0:
 #            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
@@ -623,7 +625,8 @@ def train(epoch):
 #    LoadData(epoch)
 
 #    display_images(ACQUIRED_DATA)
-    
+
+            
 
     
 def test(epoch):
@@ -664,6 +667,8 @@ def date_for_filename():
 
 
 if __name__ == "__main__":
+    if "cosine_sim" not in locals():
+        cosine_sim=plt.figure()
 #    if "fc2fig" not in locals():
 #        fc2fig, fc2axes = plt.subplots(2,1)
 #
@@ -686,7 +691,10 @@ if __name__ == "__main__":
 #        cosine_sim=plt.figure()
 #    
 #   fig,ax = plt.subplots(3,3)
-   for epoch in range(1, args.epochs + 1):
+    
+   
+    
+    for epoch in range(1, args.epochs + 1):
         train(epoch)
 
 #        display_bottleneck(fc2axes)
@@ -714,7 +722,7 @@ if __name__ == "__main__":
 #        cosine_similiarity()
         
         test(epoch)
-        model.average_all_mu(test=True)
+#        model.average_all_mu(test=True)
         
 #        for i in range(3):
 #            for j in range(3):
